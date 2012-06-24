@@ -29,6 +29,10 @@ public class Model {
         return new SList(ss);
     }
 
+    public static LList list(Object... os) {
+        return new LList(os);
+    }
+
     public static String[] toStringArray(S s) {
         if (s instanceof Symbol) {
             return new String[] { ((Symbol) s).toString() };

@@ -2,6 +2,8 @@ package com.stralos.shen;
 
 import com.stralos.shen.model.Model;
 
+import fj.data.List;
+
 
 /**
  * It's important to not modify the line numbers in this file since they are used in the generated code. 
@@ -29,5 +31,10 @@ public class Source {
 
     public static Object callPlus(Object x, Object y) {
         return Primitives.plus(x, y);
+    }
+    
+    public static Object list() {
+        List<Object> list = List.list((Object)5, "blue", callPlus(5, 4), Boolean.TRUE);
+        return list;
     }
 }

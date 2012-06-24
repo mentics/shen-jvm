@@ -122,4 +122,63 @@ public class ASMUtil {
         context.putClass(className.replace('/', '.'), cv.toByteArray());
         return context.getClasses();
     }
+    
+    /**
+     * Converts all characters that are invalid in a Java identifier to _
+     */
+    public static String toIdentifier(String string) {
+        // TODO: do more efficiently
+
+        String ret;
+        switch (string) {
+        case "=":
+            ret = "equal";
+            break;
+        case "+":
+            ret = "plus";
+            break;
+        case "-":
+            ret = "minus";
+            break;
+        case "*":
+            ret = "multiply";
+            break;
+        case "/":
+            ret = "divide";
+            break;
+        case "<":
+            ret = "lessThan";
+            break;
+        case ">":
+            ret = "greaterThan";
+            break;
+        case "<=":
+            ret = "lessThanOrEqual";
+            break;
+        case ">=":
+            ret = "greaterThanOrEqual";
+            break;
+        case "if":
+            ret = "if_";
+            break;
+        default:
+            ret = toValidJava(string);
+        }
+        return ret;
+    }
+    
+    public static String toValidJava(String string) {
+        String ret;
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < string.length(); i++) {
+            char c = string.charAt(i);
+            if (!Character.isJavaIdentifierPart(c)) {
+                b.append('_');
+            } else {
+                b.append(c);
+            }
+        }
+        ret = b.toString();
+        return ret;
+    }
 }

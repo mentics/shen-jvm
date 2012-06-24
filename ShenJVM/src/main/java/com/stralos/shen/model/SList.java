@@ -5,8 +5,7 @@ import static com.stralos.shen.Environment.*;
 import static com.stralos.shen.ShenCompiler.*;
 import static com.stralos.shen.model.Model.*;
 import static org.objectweb.asm.Opcodes.*;
-
-import java.util.ArrayList;
+import static tomove.ArrayUtil.*;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -81,11 +80,20 @@ public class SList implements S {
 
     private boolean handleBuiltInFunction(EvalContext context, MethodVisitor mv) {
         PrimOp p = Primitives.get(((Symbol) ss[0]).toString());
+        S[] params = tail(ss);
         if (p != null) {
             // Built in function
-            if (p.params.length > ss.length - 1) {
+            if (p.params.length > params.length) {
                 // Partial application
-                throw new UnsupportedOperationException();
+                String lambdaType = "com/stralos/lang/Lambda" + p.params.length;
+                mv.visitFieldInsn(GETSTATIC, PRIMITIVES_PATH, toIdentifier(ss[0].toString()), "L"+lambdaType+";");
+                
+                if (params.length > 0) {
+                    for (int i = params.length-1; i >= 0; i--) {
+                        ss[i].visit(context, mv);
+                    }
+                    mv.visitMethodInsn(INVOKEVIRTUAL, lambdaType, LAMBDA_METHOD_NAME, signatureOfArity(params.length));
+                }
             } else {
                 // Full application
                 p.visit(context, mv, ArrayUtil.tail(ss));
@@ -117,7 +125,7 @@ public class SList implements S {
 
         mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "put",
                 "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-        
+
         context.putFunction(funcName, new FunctionInfo(paramNames));
     }
 }
