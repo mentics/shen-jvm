@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.stralos.shen.model.FunctionInfo;
-import com.stralos.shen.model.S;
 
 public class EvalContext {
 
@@ -15,7 +14,6 @@ public class EvalContext {
     private Map<String, byte[]> classes = new HashMap<>();
     private Map<String, VarInfo> boundSymbols = new HashMap<>();
     private int varOffset = 0;
-
 
     // Constructors //
 
@@ -36,7 +34,7 @@ public class EvalContext {
     // Local Methods //
 
     public String newLambdaName() {
-        return ShenCompiler.NEW_LAMBDA_PATH_BASE + "$" + env.nextLambdaId();
+        return Primitives.NEW_LAMBDA_PATH_BASE + "$" + env.nextLambdaId();
     }
 
     public Map<String, VarInfo> getBoundSymbols() {
@@ -56,6 +54,11 @@ public class EvalContext {
         for (VarInfo var : vars) {
             boundSymbols.put(var.name, var);
         }
+    }
+
+    public void pop(int remove, String varName) {
+        varOffset -= remove;
+        boundSymbols.remove(varName);
     }
 
     public void putClass(String name, byte[] byteArray) {

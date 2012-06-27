@@ -6,7 +6,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
 import com.stralos.shen.EvalContext;
-import com.stralos.shen.ShenCompiler;
+import com.stralos.shen.Primitives;
 import com.stralos.shen.VarInfo;
 
 public class Symbol extends Atom {
@@ -27,8 +27,8 @@ public class Symbol extends Atom {
             mv.visitLabel(l0);
             mv.visitLineNumber(27, l0);
             mv.visitLdcInsn(label);
-            mv.visitMethodInsn(INVOKESTATIC, ShenCompiler.MODEL_PATH, "symbol", "(Ljava/lang/String;)L"
-                    + ShenCompiler.SYMBOL_PATH + ";");
+            mv.visitMethodInsn(INVOKESTATIC, Primitives.MODEL_PATH, "symbol", "(Ljava/lang/String;)L"
+                    + Primitives.SYMBOL_PATH + ";");
         }
     }
 

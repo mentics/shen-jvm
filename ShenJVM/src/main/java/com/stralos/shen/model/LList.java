@@ -1,5 +1,6 @@
 package com.stralos.shen.model;
 
+import static com.stralos.shen.model.Model.*;
 import static org.objectweb.asm.Opcodes.*;
 
 import org.objectweb.asm.Label;
@@ -28,15 +29,13 @@ public class LList implements S {
         mv.visitLabel(l0);
         mv.visitLineNumber(37, l0);
         mv.visitIntInsn(BIPUSH, len);
-        // mv.visitInsn(ICONST_4);
         mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
         int i = 0;
         for (Object o : list) {
             mv.visitInsn(DUP);
             mv.visitIntInsn(BIPUSH, i++);
-            // mv.visitInsn(ICONST_0); // index into array
-            ((S) o).visit(context, mv); // TODO: symbols must stay just a symbol
-            // mv.visitInsn(ICONST_5);
+            // TODO: symbols must stay just a symbol? or does it "just work"?
+            toS(o).visit(context, mv);
             mv.visitInsn(AASTORE);
         }
         mv.visitMethodInsn(INVOKESTATIC, "com/stralos/shen/model/LList", "list",

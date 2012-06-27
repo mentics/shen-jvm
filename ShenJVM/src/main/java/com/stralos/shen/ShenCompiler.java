@@ -15,16 +15,8 @@ import com.stralos.lang.Lambda0;
 import com.stralos.shen.model.S;
 
 public class ShenCompiler {
-    public static final String LAMBDA_METHOD_NAME = "apply";
-    public static final String LAMBDA_PATH_BASE = "com/stralos/lang/Lambda";
-    public static final String NEW_LAMBDA_PATH_BASE = "shen/lambda/ToRun";
-
-    public static final String SYMBOL_PATH = "com/stralos/shen/model/Symbol";
-    public static final String MODEL_PATH = "com/stralos/shen/model/Model";
-    public static final String PRIMITIVES_PATH = "com/stralos/shen/Primitives";
-
     public static Lambda0 compile(S s) {
-        return compile(new Environment(), s);
+        return compile(Environment.theEnvironment(), s);
     }
 
     public static Lambda0 compile(Environment env, S s) {
@@ -48,10 +40,10 @@ public class ShenCompiler {
 
     public static byte[] makeLambda(S s, String fullName, EvalContext context) {
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-        cw.visit(V1_7, ACC_PUBLIC + ACC_SUPER, fullName, null, LAMBDA_PATH_BASE + 0, null);
+        cw.visit(V1_7, ACC_PUBLIC + ACC_SUPER, fullName, null, Primitives.LAMBDA_PATH_BASE + 0, null);
         setupConstructor(fullName, cw);
 
-        MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, LAMBDA_METHOD_NAME, "()Ljava/lang/Object;", null, null);
+        MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, Primitives.LAMBDA_METHOD_NAME, "()Ljava/lang/Object;", null, null);
         mv.visitCode();
         Label l0 = new Label();
         mv.visitLabel(l0);
@@ -90,4 +82,7 @@ public class ShenCompiler {
         mv.visitMaxs(1, 1);
         mv.visitEnd();
     }
+
+    public static final String COMPILER_METHOD_SIGNATURE = "(Lcom/stralos/shen/model/S;)Lcom/stralos/lang/Lambda0;";
+    public static final String LLIST_PATH = "com/stralos/shen/model/LList";
 }

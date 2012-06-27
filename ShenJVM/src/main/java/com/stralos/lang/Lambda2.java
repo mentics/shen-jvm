@@ -1,10 +1,6 @@
 package com.stralos.lang;
 
-public abstract class Lambda2 implements Lambda {
-    public Object apply() {
-        return this;
-    }
-
+public abstract class Lambda2 extends Lambda1 {
     public Object apply(final Object x0) {
         return new Lambda1() {
             public Object apply(Object x1) {

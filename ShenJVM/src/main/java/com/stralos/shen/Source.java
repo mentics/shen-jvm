@@ -28,13 +28,4 @@ public class Source {
     public static Object symbol() {
         return Model.symbol("constant string");
     }
-
-    public static Object callPlus(Object x, Object y) {
-        return Primitives.plus(x, y);
-    }
-    
-    public static Object list() {
-        List<Object> list = List.list((Object)5, "blue", callPlus(5, 4), Boolean.TRUE);
-        return list;
-    }
 }
