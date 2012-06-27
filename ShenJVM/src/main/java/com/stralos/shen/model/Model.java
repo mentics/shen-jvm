@@ -5,8 +5,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class Model {
+    public static S nil = slist();
+
     static Map<String, Symbol> symbols = new HashMap<>();
+
 
     public static Symbol symbol(String label) {
         Symbol s = symbols.get(label);

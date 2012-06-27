@@ -1,17 +1,32 @@
 package com.stralos.shen;
 
-import static com.stralos.shen.model.Model.*;
+import static java.util.Calendar.*;
 
+import java.io.Closeable;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import com.stralos.asm.ASMUtil;
 import com.stralos.lang.Lambda;
 import com.stralos.lang.Lambda1;
 import com.stralos.lang.Lambda2;
+import com.stralos.lang.Lambda3;
+import com.stralos.shen.model.Model;
 
 import fj.data.List;
 
 
+/**
+ * TODO: Because Byte extends Number, we might be able to return it from functions here. Perhaps Integer, too, for
+ * indexes.
+ */
 public class Primitives {
     public static final String PRIMITIVES_PATH = "com/stralos/shen/Primitives";
 
@@ -31,13 +46,9 @@ public class Primitives {
 
     public static Lambda intern = new Lambda1() {
         public Object apply(Object str) {
-            return symbol((String) str);
+            return Model.symbol((String) str);
         }
     };
-
-
-    // Boolean Operations are handled specially because they don't evaluate all their arguments //
-    // TODO: remove this todo when they're done
 
 
     // Strings //
@@ -154,13 +165,6 @@ public class Primitives {
     };
 
     /**
-     * trap-error has to be handled specially
-     * evaluates its first argument A; if it is not an exception returns the normal form, returns A else applies its
-     * second argument to the exception
-     * TODO: remove this todo when it's done
-     */
-
-    /**
      * exception --> string
      * maps an exception to a string
      */
@@ -173,32 +177,55 @@ public class Primitives {
 
     // Lists //
 
-    public static Lambda2 cons = new Lambda2() {
+    public static Lambda cons = new Lambda2() {
         public Object apply(Object newElm, Object list) {
             return ((List<Object>) list).cons(newElm);
         }
     };
 
-    public static Lambda1 hd = new Lambda1() {
+    public static Lambda hd = new Lambda1() {
         public Object apply(Object list) {
             return ((List<Object>) list).head();
         }
     };
 
-    public static Lambda1 tl = new Lambda1() {
+    public static Lambda tl = new Lambda1() {
         public Object apply(Object list) {
             return ((List<Object>) list).tail();
         }
     };
 
-    public static Lambda1 cons_ = new Lambda1() {
+    public static Lambda cons_ = new Lambda1() {
         public Object apply(Object list) {
             return list instanceof List && !((List<Object>) list).isEmpty();
         }
     };
 
-    // Generic Functions are handled specially //
-    // TODO: remove this todo when they're done
+    // Generic Functions, most are handled specially //
+
+    /**
+     * A --> A --> boolean
+     * equality
+     * 
+     * NOTE: I'm assuming that null != null
+     */
+    public static Lambda equal = new Lambda2() {
+        public Object apply(Object x0, Object x1) {
+            return x0 != null && x0.equals(x1);
+        }
+    };
+
+    /**
+     * X : A;
+     * (type X A) : A;
+     * labels the type of an expression
+     */
+    public static Lambda type = new Lambda2() {
+        public Object apply(Object expr, Object type) {
+            System.out.println("type called: " + expr + ", " + type);
+            return expr;
+        }
+    };
 
 
     // Vectors //
@@ -206,15 +233,142 @@ public class Primitives {
     /**
      * create a vector in the native platform
      */
-    public static Lambda1 absvector = new Lambda1() {
+    public static Lambda absvector = new Lambda1() {
         public Object apply(Object size) {
-            int sz = ((Number)size).intValue();
+            int sz = ((Number) size).intValue();
             Object[] os = new Object[sz + 1];
             os[0] = size;
-            for (int i=1; i<=sz; i++) {
+            for (int i = 1; i <= sz; i++) {
                 os[i] = FAIL;
             }
             return os;
+        }
+    };
+
+    /**
+     * destructively assign a value to a vector address
+     */
+    public static Lambda address__ = new Lambda3() {
+        public Object apply(Object v, Object index, Object value) {
+            ((Object[]) v)[((Number) index).intValue()] = value;
+            return v;
+        }
+    };
+
+    /**
+     * retrieve a value from a vector address
+     */
+    public static Lambda __address = new Lambda2() {
+        public Object apply(Object v, Object index) {
+            return ((Object[]) v)[((Number) index).intValue()];
+        }
+    };
+
+
+    // Streams and I/O //
+
+    /**
+     * string --> (stream out) --> string
+     * print a string to a stream
+     */
+    public static Lambda pr = new Lambda2() {
+        public Object apply(Object string, Object streamOut) {
+            try {
+                ((OutputStream) streamOut).write(((String) string).getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return string;
+        }
+    };
+
+    /**
+     * (stream in) --> number
+     * read an unsigned 8 bit byte from a stream
+     * TODO: Note: we're using a long to read a byte?
+     */
+    public static Lambda read_byte = new Lambda1() {
+        public Object apply(Object streamIn) {
+            try {
+                return (long) ((InputStream) streamIn).read();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
+
+    /**
+     * File : string; Direction : direction;
+     * (open file File Direction) : (stream Direction);
+     * open a stream
+     */
+    public static Lambda open = new Lambda3() {
+        public Object apply(Object type, Object location, Object direction) {
+            if ("file".equals(type.toString())) {
+                String dir = direction.toString();
+                if ("in".equals(dir)) {
+                    try {
+                        return new FileInputStream((String) location);
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else if ("out".equals(dir)) {
+                    try {
+                        return new FileOutputStream((String) location);
+                    } catch (FileNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    throw new RuntimeException("Invalid stream direction passed to first parameter of open: " + dir);
+                }
+            } else {
+                throw new RuntimeException("Invalid stream type passed to first parameter of open: " + type);
+            }
+        }
+    };
+
+    /**
+     * close a stream
+     */
+    public static Lambda close = new Lambda1() {
+        public Object apply(Object stream) {
+            try {
+                ((Closeable) stream).close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return List.nil();
+        }
+    };
+
+
+    // Time //
+
+    /**
+     * symbol --> number
+     * get the run/real time
+     */
+    public static Lambda get_time = new Lambda1() {
+        public Object apply(Object x) {
+            String type = x.toString();
+            switch (type) {
+            case "real":
+                long time = System.nanoTime();
+                return (double) time / 10E9;
+            case "run":
+                throw new RuntimeException("CPU run time not supported.");
+            case "date":
+                // year, month, day, hour, minute and second.
+                Calendar c = GregorianCalendar.getInstance();
+                return List.list(c.get(YEAR),
+                                 c.get(MONTH),
+                                 c.get(DAY_OF_MONTH),
+                                 c.get(HOUR_OF_DAY),
+                                 c.get(MINUTE),
+                                 c.get(SECOND));
+            default:
+                throw new RuntimeException("Invalid parameter to get-time.");
+            }
         }
     };
 
@@ -259,6 +413,52 @@ public class Primitives {
             } else {
                 return ((Number) x).doubleValue() / ((Number) y).doubleValue();
             }
+        }
+    };
+
+    public static Lambda greaterThan = new Lambda2() {
+        public Object apply(Object x, Object y) {
+            if (x instanceof Long && y instanceof Long) {
+                return (Long) x > (Long) y;
+            } else {
+                return ((Number) x).doubleValue() > ((Number) y).doubleValue();
+            }
+        }
+    };
+
+    public static Lambda lessThan = new Lambda2() {
+        public Object apply(Object x, Object y) {
+            if (x instanceof Long && y instanceof Long) {
+                return (Long) x < (Long) y;
+            } else {
+                return ((Number) x).doubleValue() < ((Number) y).doubleValue();
+            }
+        }
+    };
+
+    public static Lambda greaterThanOrEqual = new Lambda2() {
+        public Object apply(Object x, Object y) {
+            if (x instanceof Long && y instanceof Long) {
+                return (Long) x >= (Long) y;
+            } else {
+                return ((Number) x).doubleValue() >= ((Number) y).doubleValue();
+            }
+        }
+    };
+
+    public static Lambda lessThanOrEqual = new Lambda2() {
+        public Object apply(Object x, Object y) {
+            if (x instanceof Long && y instanceof Long) {
+                return (Long) x <= (Long) y;
+            } else {
+                return ((Number) x).doubleValue() <= ((Number) y).doubleValue();
+            }
+        }
+    };
+
+    public static Lambda number_ = new Lambda1() {
+        public Object apply(Object x) {
+            return x instanceof Number;
         }
     };
 

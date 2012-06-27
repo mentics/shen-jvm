@@ -261,4 +261,12 @@ public class ASMUtil {
         }
         return result;
     }
+
+    public static void throwExc(MethodVisitor mv, String msg) {
+        mv.visitTypeInsn(NEW, "java/lang/RuntimeException");
+        mv.visitInsn(DUP);
+        mv.visitLdcInsn(msg);
+        mv.visitMethodInsn(INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/String;)V");
+        mv.visitInsn(ATHROW);
+    }
 }

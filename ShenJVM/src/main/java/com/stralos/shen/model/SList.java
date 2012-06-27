@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 import com.stralos.asm.ASMUtil;
 import com.stralos.shen.EvalContext;
@@ -74,7 +75,10 @@ public class SList implements S {
             Primitives.class.getField(toIdentifier(funcName));
             // Built in function
             S[] args = tail(ss);
-            mv.visitFieldInsn(GETSTATIC, PRIMITIVES_PATH, toIdentifier(funcName), "L"+LAMBDA_PATH_BASE+";");//"L" + lambdaType + ";");
+            mv.visitFieldInsn(GETSTATIC, PRIMITIVES_PATH, toIdentifier(funcName), "L" + LAMBDA_PATH_BASE + ";");// "L" +
+                                                                                                                // lambdaType
+                                                                                                                // +
+                                                                                                                // ";");
 
             if (args.length > 0) {
                 String lambdaType = LAMBDA_PATH_BASE + args.length;
@@ -93,6 +97,9 @@ public class SList implements S {
 
     // Special Forms //
 
+    /**
+     * These are special forms and functions that do not follow applicative evaluation for their parameters.
+     */
     private boolean handleSpecialForm(EvalContext context, MethodVisitor mv, S[] s) {
         boolean handled = true;
         S[] params = tail(s);
@@ -109,11 +116,30 @@ public class SList implements S {
         case "eval-kl":
             handleEvalKl(context, mv, params);
             break;
+        case "freeze":
+            handleFreeze(context, mv, params);
+            break;
+        case "trap-error":
+            handleTrapError(context, mv, params);
+            break;
+        case "if":
+            handleIf(context, mv, params);
+            break;
+        case "and":
+            handleAnd(context, mv, params);
+            break;
+        case "or":
+            handleOr(context, mv, params);
+            break;
+        case "cond":
+            handleCond(context, mv, params);
+            break;
         default:
             handled = false;
         }
         return handled;
     }
+
 
     private void handleDefun(EvalContext context, MethodVisitor mv, S[] params) {
         String funcName = params[0].toString();
@@ -210,5 +236,150 @@ public class SList implements S {
                            Primitives.LAMBDA_PATH_BASE + 0,
                            Primitives.LAMBDA_METHOD_NAME,
                            signatureOfArity(0));
+    }
+
+    /**
+     * A --> (lazy A)
+     * creates a continuation
+     */
+    private void handleFreeze(EvalContext context, MethodVisitor mv, S[] params) {
+        handleLambda(context, mv, new S[] { Model.nil, params[0] });
+    }
+
+    /**
+     * A --> (exception --> A) --> A
+     * trap-error has to be handled specially
+     * evaluates its first argument A; if it is not an exception returns the normal form, returns A else applies its
+     * second argument to the exception
+     */
+    private void handleTrapError(EvalContext context, MethodVisitor mv, S[] params) {
+        Label l0 = new Label();
+        Label l1 = new Label();
+        Label l2 = new Label();
+        Label l3 = new Label();
+        Label l4 = new Label();
+        mv.visitTryCatchBlock(l0, l1, l2, "java/lang/Throwable");
+        mv.visitLabel(l0);
+        mv.visitLineNumber(14, l0);
+
+        params[0].visit(context, mv);
+
+        mv.visitLabel(l1);
+        mv.visitJumpInsn(GOTO, l3);
+        mv.visitLabel(l2);
+        mv.visitLineNumber(15, l2);
+        mv.visitVarInsn(ASTORE, 1);
+        mv.visitLabel(l4);
+        mv.visitLineNumber(16, l4);
+
+        int varOffset = context.getVarOffset();
+        context.push(1, new VarInfo(varOffset, "e", l4, l3));
+        params[1].visit(context, mv);
+        context.pop(1, "e");
+
+        mv.visitLabel(l3);
+        mv.visitLineNumber(18, l3);
+        Label l5 = new Label();
+        mv.visitLabel(l5);
+    }
+
+    private void handleIf(EvalContext context, MethodVisitor mv, S[] params) {
+        Label l0 = new Label();
+        mv.visitLabel(l0);
+
+        params[0].visit(context, mv);
+
+        Label l2 = new Label();
+        mv.visitJumpInsn(IFEQ, l2);
+        Label l3 = new Label();
+        mv.visitLabel(l3);
+
+        params[1].visit(context, mv);
+
+        Label l4 = new Label();
+        mv.visitJumpInsn(GOTO, l4);
+        mv.visitLabel(l2);
+
+        params[2].visit(context, mv);
+
+        mv.visitLabel(l4);
+    }
+
+    private void handleAnd(EvalContext context, MethodVisitor mv, S[] params) {
+        Label l0 = new Label();
+        mv.visitLabel(l0);
+        mv.visitLineNumber(31, l0);
+
+        params[0].visit(context, mv);
+
+        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
+        Label l1 = new Label();
+        mv.visitJumpInsn(IFEQ, l1);
+
+        params[1].visit(context, mv);
+
+        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
+        mv.visitJumpInsn(IFEQ, l1);
+        mv.visitInsn(ICONST_1);
+        Label l2 = new Label();
+        mv.visitJumpInsn(GOTO, l2);
+        mv.visitLabel(l1);
+        mv.visitInsn(ICONST_0);
+        mv.visitLabel(l2);
+        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;");
+    }
+
+    private void handleOr(EvalContext context, MethodVisitor mv, S[] params) {
+        Label l0 = new Label();
+        mv.visitLabel(l0);
+        mv.visitLineNumber(37, l0);
+
+        params[0].visit(context, mv);
+
+        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
+        Label l1 = new Label();
+        mv.visitJumpInsn(IFNE, l1);
+
+        params[1].visit(context, mv);
+
+        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
+        mv.visitJumpInsn(IFNE, l1);
+        mv.visitInsn(ICONST_0);
+        Label l2 = new Label();
+        mv.visitJumpInsn(GOTO, l2);
+        mv.visitLabel(l1);
+        mv.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
+        mv.visitInsn(ICONST_1);
+        mv.visitLabel(l2);
+        mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] { Opcodes.INTEGER });
+        mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;");
+    }
+
+    private void handleCond(EvalContext context, MethodVisitor mv, S[] params) {
+        Label end = new Label();
+        if (params.length % 2 != 0) {
+            throw new RuntimeException("Invalid number of params to cond.");
+        }
+        for (int i = 0; i < params.length; i += 2) {
+            Label skip = new Label();
+            S cond = params[i];
+            S ifTrue = params[i + 1];
+
+            cond.visit(context, mv);
+            mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+            mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
+            mv.visitJumpInsn(IFEQ, skip);
+
+            ifTrue.visit(context, mv);
+            mv.visitJumpInsn(GOTO, end);
+
+            mv.visitLabel(skip);
+        }
+        ASMUtil.throwExc(mv, "No clause returned true in cond.");
+        mv.visitLabel(end);
     }
 }

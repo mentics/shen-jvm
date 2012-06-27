@@ -2,11 +2,9 @@ package com.stralos.shen;
 
 import com.stralos.shen.model.Model;
 
-import fj.data.List;
-
 
 /**
- * It's important to not modify the line numbers in this file since they are used in the generated code. 
+ * It's important to not modify the line numbers in this file since they are used in the generated code.
  */
 public class Source {
     public static Object bool() {
@@ -27,5 +25,21 @@ public class Source {
 
     public static Object symbol() {
         return Model.symbol("constant string");
+    }
+
+    public static Object and(Object x0, Object x1) {
+        Boolean value = (boolean) x0 && (boolean) x1;
+        System.out.println(value);
+        return value;
+    }
+    
+    public static Object or(Object x0, Object x1) {
+        Boolean value = (boolean) x0 || (boolean) x1;
+        System.out.println(value);
+        return value;
+    }
+    
+    public static Object thr() {
+        throw new RuntimeException("No clause returned true in cond.");
     }
 }
