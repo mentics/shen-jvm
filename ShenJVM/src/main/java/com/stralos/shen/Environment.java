@@ -1,5 +1,8 @@
 package com.stralos.shen;
 
+import static com.stralos.shen.model.Model.*;
+
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +26,15 @@ public class Environment {
         return ENV;
     }
 
+    public static void setGlobals(Map<Symbol, Object> symbolAssignments) {
+        symbolAssignments.put(symbol("*stoutput*"), System.out);
+        symbolAssignments.put(symbol("*stinput*"), System.in);
+        symbolAssignments.put(symbol("*home_directory*"), new File(".").getAbsolutePath());
+        symbolAssignments.put(symbol("*language*"), "JVM Bytecode");
+        symbolAssignments.put(symbol("*port*"), "0.0");
+        symbolAssignments.put(symbol("*porters*"), "Joel Shellman");
+    }
+
 
     private int nextLambdaId;
     public Map<String, byte[]> globalClasses = new HashMap<>();
@@ -32,7 +44,9 @@ public class Environment {
     private Map<Symbol, Object> symbolAssignments = new HashMap<>();
 
 
-    private Environment() {}
+    private Environment() {
+        setGlobals(symbolAssignments);
+    }
 
     public int nextLambdaId() {
         return nextLambdaId++;

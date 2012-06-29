@@ -53,7 +53,7 @@ public class ASMUtil {
                                                         String[] params) {
         ClassWriter cv = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cv.visit(V1_7, ACC_PUBLIC + ACC_SUPER, className, null, Primitives.LAMBDA_PATH_BASE + params.length, null);
-        System.err.println("creating lambda: " + className);
+        // System.err.println("creating lambda: " + className);
         cv.visitSource("com/stralos/shen/Source.java", null);
 
         for (int i = 0; i < vars.length; i++) {
@@ -116,7 +116,10 @@ public class ASMUtil {
             mv.visitLabel(l1);
             mv.visitLocalVariable("this", "L" + className + ";", null, l0, l1, 0);
             for (VarInfo var : context.getBoundSymbols().values()) {
-                mv.visitLocalVariable(var.name, "Ljava/lang/Object;", null, var.beginLabel, var.endLabel, var.index);
+                // TODO: make less ugly
+                if (!(var instanceof FieldInfo)) {
+                    mv.visitLocalVariable(var.name, "Ljava/lang/Object;", null, var.beginLabel, var.endLabel, var.index);
+                }
             }
 
             mv.visitMaxs(0, 0);

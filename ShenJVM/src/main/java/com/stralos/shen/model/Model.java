@@ -33,6 +33,10 @@ public class Model {
         return new Str(s);
     }
 
+    public static S bool(boolean b) {
+        return new Bool(b);
+    }
+
     public static S slist(S... ss) {
         return new SList(ss);
     }

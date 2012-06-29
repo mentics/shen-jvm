@@ -288,6 +288,8 @@ public class SList implements S {
         mv.visitLabel(l0);
 
         params[0].visit(context, mv);
+        mv.visitTypeInsn(CHECKCAST, "java/lang/Boolean");
+        mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Boolean", "booleanValue", "()Z");
 
         Label l2 = new Label();
         mv.visitJumpInsn(IFEQ, l2);

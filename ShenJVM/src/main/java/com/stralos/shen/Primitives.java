@@ -87,6 +87,7 @@ public class Primitives {
     /**
      * A --> string
      * maps any atom to a string
+     * TODO: exactly how different atoms should be output: like strings with "'s
      */
     public static Lambda str = new Lambda1() {
         public Object apply(Object atom) {
@@ -235,13 +236,14 @@ public class Primitives {
      */
     public static Lambda absvector = new Lambda1() {
         public Object apply(Object size) {
-            int sz = ((Number) size).intValue();
-            Object[] os = new Object[sz + 1];
-            os[0] = size;
-            for (int i = 1; i <= sz; i++) {
-                os[i] = FAIL;
-            }
-            return os;
+            // int sz = ((Number) size).intValue();
+            // Object[] os = new Object[sz + 1];
+            // os[0] = size;
+            // for (int i = 1; i <= sz; i++) {
+            // os[i] = FAIL;
+            // }
+            // return os;
+            return new Object[((Number) size).intValue()];
         }
     };
 
@@ -468,7 +470,7 @@ public class Primitives {
             for (Field f : Primitives.class.getFields()) {
                 if (Lambda.class.isAssignableFrom(f.getType())) {
                     Environment.functions.put(ASMUtil.fromIdentifier(f.getName()), (Lambda) f.get(null));
-                    System.out.println("put: " + ASMUtil.fromIdentifier(f.getName()) + ", " + (Lambda) f.get(null));
+//                    System.out.println("put: " + ASMUtil.fromIdentifier(f.getName()) + ", " + (Lambda) f.get(null));
                 }
             }
         } catch (IllegalAccessException e) {
