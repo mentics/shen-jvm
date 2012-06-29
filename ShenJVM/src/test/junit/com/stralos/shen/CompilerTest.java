@@ -17,6 +17,23 @@ public class CompilerTest {
     }
 
     @Test
+    public void testTrapError() {
+        assertTrue((Boolean) compile(slist(symbol("trap-error"),
+                                           slist(symbol("/"), integer(1), integer(0)),
+                                           slist(symbol("lambda"), symbol("E"), integer(-1)))).apply());
+    }
+
+    @Test
+    public void testClassLoaderIssue() {
+        assertTrue((Boolean) compile(slist(symbol("="),
+                                           slist(symbol("trap-error"),
+                                                 slist(symbol("/"), integer(1), integer(0)),
+                                                 slist(symbol("lambda"), symbol("E"), integer(-1))),
+                                           integer(-1))).apply());
+        // (test-is (= (trap-error (/ 1 0) (lambda E -1)) -1))
+    }
+
+    @Test
     public void testLambda() {
         Lambda1 l = (Lambda1) compile(slist(symbol("lambda"), symbol("X"), slist(symbol("+"), symbol("X"), integer(6)))).apply();
         assertEquals(11l, l.apply(5l));

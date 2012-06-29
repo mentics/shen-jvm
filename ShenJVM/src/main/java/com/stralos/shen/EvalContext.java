@@ -5,15 +5,17 @@ import java.util.Map;
 
 import com.stralos.shen.model.FunctionInfo;
 
+
 public class EvalContext {
 
     // Instance Fields //
 
     private Environment env;
 
-    private Map<String, byte[]> classes = new HashMap<>();
+    // private Map<String, byte[]> classes = new HashMap<>();
     private Map<String, VarInfo> boundSymbols = new HashMap<>();
     private int varOffset = 0;
+
 
     // Constructors //
 
@@ -23,9 +25,9 @@ public class EvalContext {
 
     // Public Methods //
 
-    public Map<String, byte[]> getClasses() {
-        return classes;
-    }
+    // public Map<String, byte[]> getClasses() {
+    // return classes;
+    // }
 
     public VarInfo getBoundSymbol(String label) {
         return boundSymbols.get(label);
@@ -61,13 +63,14 @@ public class EvalContext {
         boundSymbols.remove(varName);
     }
 
-    public void putClass(String name, byte[] byteArray) {
-        classes.put(name, byteArray);
+    public void addClass(String name, byte[] byteArray) {
+        // classes.put(name, byteArray);
+        env.addClass(name, byteArray);
     }
 
-    public void putClasses(Map<String, byte[]> newClasses) {
-        classes.putAll(newClasses);
-    }
+    // public void putClasses(Map<String, byte[]> newClasses) {
+    // classes.putAll(newClasses);
+    // }
 
     public int getVarOffset() {
         return varOffset;

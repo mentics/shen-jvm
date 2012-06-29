@@ -3,6 +3,8 @@ package com.stralos.shen.model;
 import static com.stralos.shen.model.Model.*;
 import static org.objectweb.asm.Opcodes.*;
 
+import java.util.Iterator;
+
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 
@@ -10,14 +12,20 @@ import com.stralos.shen.EvalContext;
 
 import fj.data.List;
 
+
 public class LList implements S {
     private static final long serialVersionUID = 8688805225174793587L;
+
+    public static final LList NIL = new LList();
+
 
     public static LList list(Object... os) {
         return new LList(os);
     }
 
+
     private final List<Object> list;
+
 
     public LList(Object... ss) {
         list = List.list(ss);
@@ -38,11 +46,27 @@ public class LList implements S {
             toS(o).visit(context, mv);
             mv.visitInsn(AASTORE);
         }
-        mv.visitMethodInsn(INVOKESTATIC, "com/stralos/shen/model/LList", "list",
-                "([Ljava/lang/Object;)Lcom/stralos/shen/model/LList;");
+        mv.visitMethodInsn(INVOKESTATIC,
+                           "com/stralos/shen/model/LList",
+                           "list",
+                           "([Ljava/lang/Object;)Lcom/stralos/shen/model/LList;");
     }
 
     public List<Object> toList() {
         return list;
+    }
+
+    public String toString() {
+        String res = "";
+        if (list.length() > 0) {
+            StringBuilder in = new StringBuilder();
+            Iterator<Object> it = list.iterator();
+            in.append(it.next().toString());
+            while (it.hasNext()) {
+                in.append(it.next().toString());
+            }
+            res = in.toString();
+        }
+        return "[" + res + "]";
     }
 }

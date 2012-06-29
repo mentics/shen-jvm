@@ -23,4 +23,8 @@ public class Int extends Number {
         mv.visitLdcInsn(Long.valueOf(i));
         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;");
     }
+    
+    public String toString() {
+        return Long.toString(i);
+    }
 }

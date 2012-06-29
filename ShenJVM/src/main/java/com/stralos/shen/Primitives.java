@@ -18,6 +18,7 @@ import com.stralos.lang.Lambda;
 import com.stralos.lang.Lambda1;
 import com.stralos.lang.Lambda2;
 import com.stralos.lang.Lambda3;
+import com.stralos.shen.model.LList;
 import com.stralos.shen.model.Model;
 
 import fj.data.List;
@@ -180,6 +181,10 @@ public class Primitives {
 
     public static Lambda cons = new Lambda2() {
         public Object apply(Object newElm, Object list) {
+            // Unify the two possibilities
+            if (list instanceof LList) {
+                list = ((LList) list).toList();
+            }
             return ((List<Object>) list).cons(newElm);
         }
     };
@@ -263,6 +268,12 @@ public class Primitives {
     public static Lambda __address = new Lambda2() {
         public Object apply(Object v, Object index) {
             return ((Object[]) v)[((Number) index).intValue()];
+        }
+    };
+
+    public static Lambda absvector_ = new Lambda1() {
+        public Object apply(Object v) {
+            return v instanceof Object[];
         }
     };
 
@@ -470,7 +481,7 @@ public class Primitives {
             for (Field f : Primitives.class.getFields()) {
                 if (Lambda.class.isAssignableFrom(f.getType())) {
                     Environment.functions.put(ASMUtil.fromIdentifier(f.getName()), (Lambda) f.get(null));
-//                    System.out.println("put: " + ASMUtil.fromIdentifier(f.getName()) + ", " + (Lambda) f.get(null));
+                    // System.out.println("put: " + ASMUtil.fromIdentifier(f.getName()) + ", " + (Lambda) f.get(null));
                 }
             }
         } catch (IllegalAccessException e) {

@@ -24,4 +24,8 @@ public class Bool extends Atom implements Serializable {
         mv.visitLineNumber(9, l0);
         mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", value ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
     }
+    
+    public String toString() {
+        return Boolean.toString(value);
+    }
 }

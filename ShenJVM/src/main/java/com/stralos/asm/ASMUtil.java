@@ -3,8 +3,6 @@ package com.stralos.asm;
 import static com.stralos.shen.Environment.*;
 import static org.objectweb.asm.Opcodes.*;
 
-import java.util.Map;
-
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
@@ -21,6 +19,10 @@ import com.stralos.shen.model.Symbol;
 
 
 public class ASMUtil {
+    public static void run(EvalContext context, String fullName, S s) {
+        createLambdaClass(context, new VarInfo[0], fullName, s, new String[0]);
+    }
+
     public static String constructorOfArity(int arity) {
         StringBuilder b = new StringBuilder(arity * 20);
         b.append('(');
@@ -49,11 +51,11 @@ public class ASMUtil {
     /**
      * @param context for just this lambda class. Don't use the same as the parent.
      */
-    public static Map<String, byte[]> createLambdaClass(EvalContext context, VarInfo[] vars, String className, S body,
-                                                        String[] params) {
+    public static void
+            createLambdaClass(EvalContext context, VarInfo[] vars, String className, S body, String[] params) {
         ClassWriter cv = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cv.visit(V1_7, ACC_PUBLIC + ACC_SUPER, className, null, Primitives.LAMBDA_PATH_BASE + params.length, null);
-        // System.err.println("creating lambda: " + className);
+        System.err.println("creating lambda: " + className);
         cv.visitSource("com/stralos/shen/Source.java", null);
 
         for (int i = 0; i < vars.length; i++) {
@@ -127,8 +129,8 @@ public class ASMUtil {
             mv.visitEnd();
         }
         cv.visitEnd();
-        context.putClass(className.replace('/', '.'), cv.toByteArray());
-        return context.getClasses();
+        context.addClass(className.replace('/', '.'), cv.toByteArray());
+        // return context.getClasses();
     }
 
     /**

@@ -1,25 +1,28 @@
 package com.stralos.shen;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
-public class DirectClassLoader extends ClassLoader {
-    private Map<String, byte[]> direct;
-    private Environment env;
 
-    public DirectClassLoader(Environment env, Map<String, byte[]> direct) {
-        this.env = env;
-        this.direct = direct;
+public class DirectClassLoader extends ClassLoader {
+    private Map<String, byte[]> direct = new HashMap<String, byte[]>();
+
+
+    public DirectClassLoader(ClassLoader parent) {
+        super(parent);
+    }
+
+    public void addClass(String key, byte[] cl) {
+        direct.put(key, cl);
     }
 
     @Override
-    protected Class findClass(String name) throws ClassNotFoundException {
+    protected Class loadClass(String name, boolean resolve) throws ClassNotFoundException {
         Class<?> found;
 
         byte[] cls = this.direct.get(name);
-        if (cls == null) {
-            cls = env.globalClasses.get(name);
-        }
 
         if (cls != null) {
             // System.err.println("================");
@@ -37,10 +40,26 @@ public class DirectClassLoader extends ClassLoader {
             }
 
             found = defineClass(name, cls, 0, cls.length);
-            env.globalClasses.put(name, cls);
-            // GlobalContext.globalClasses.put(name, found);
         } else {
-            found = super.findClass(name);
+            if (true) {
+                return super.loadClass(name, resolve);
+            }
+            try {
+                // found = super.loadClass(name, false);
+                // URL findResource = findResource(name.replace('.', '/'));
+                // InputStream in = findResource.openStream();
+                super.loadClass(name, false);
+                InputStream in = getResourceAsStream(name);
+                byte[] buff = new byte[10000000];
+                int num = in.read(buff);
+                // byte[] shorten = new byte[num];
+                // System.arraycopy(buff, 0, shorten, 0, num);
+                found = defineClass(name, buff, 0, num);
+
+                System.out.println(name + " cl: " + found.getClassLoader());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
         return found;
     }

@@ -8,7 +8,6 @@ import static org.objectweb.asm.Opcodes.*;
 import static tomove.ArrayUtil.*;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -28,6 +27,20 @@ public class SList implements S {
 
     public SList(S... ss) {
         this.ss = ss;
+    }
+
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append('(');
+        if (ss.length > 0) {
+            b.append(ss[0].toString());
+            for (int i = 1; i < ss.length; i++) {
+                b.append(' ');
+                b.append(ss[i].toString());
+            }
+        }
+        b.append(')');
+        return b.toString();
     }
 
     public void visit(EvalContext context, MethodVisitor mv) {
@@ -149,7 +162,7 @@ public class SList implements S {
         loadGlobalFunctions(mv);
 
         String newLambdaName = context.newLambdaName();
-        context.putClasses(createLambdaClass(context.newChildContext(), new VarInfo[0], newLambdaName, body, paramNames));
+        createLambdaClass(context.newChildContext(), new VarInfo[0], newLambdaName, body, paramNames);
 
         mv.visitLdcInsn(funcName);
 
@@ -174,12 +187,11 @@ public class SList implements S {
         // Capture the lexical scoped variables
         Collection<VarInfo> vars = context.getBoundSymbols().values();
 
-        Map<String, byte[]> newClasses = createLambdaClass(context.newChildContext(),
-                                                           vars.toArray(new VarInfo[vars.size()]),
-                                                           className,
-                                                           params[1],
-                                                           toStringArray(params[0]));
-        context.putClasses(newClasses);
+        createLambdaClass(context.newChildContext(),
+                          vars.toArray(new VarInfo[vars.size()]),
+                          className,
+                          params[1],
+                          toStringArray(params[0]));
         Label l0 = new Label();
         mv.visitLabel(l0);
         mv.visitTypeInsn(NEW, className);

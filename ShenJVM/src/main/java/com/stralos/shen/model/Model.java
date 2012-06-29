@@ -38,6 +38,10 @@ public class Model {
     }
 
     public static S slist(S... ss) {
+        // TODO: we should handle () nil at the parser level, I think, but for now, we'll put it in here
+        if (ss == null || ss.length == 0) {
+            return LList.NIL;
+        }
         return new SList(ss);
     }
 
@@ -85,6 +89,14 @@ public class Model {
                 str.add(inside.toString());
             }
             return str.toArray(new String[str.size()]);
+        } else if (s instanceof LList) {
+            fj.data.List<Object> l = ((LList) s).toList();
+            String[] result = new String[l.length()];
+            int i = 0;
+            for (Object o : l) {
+                result[i++] = o.toString();
+            }
+            return result;
         } else {
             throw new RuntimeException("Invalid expression for first param of lambda");
         }

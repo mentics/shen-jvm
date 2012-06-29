@@ -23,4 +23,8 @@ public class Flot extends Number {
         mv.visitLdcInsn(Double.valueOf(num));
         mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;");
     }
+    
+    public String toString() {
+        return Double.toString(num);
+    }
 }

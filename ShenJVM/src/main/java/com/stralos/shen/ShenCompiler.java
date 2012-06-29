@@ -1,8 +1,7 @@
 package com.stralos.shen;
 
+import static com.stralos.asm.ASMUtil.*;
 import static org.objectweb.asm.Opcodes.*;
-
-import java.util.Map;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -10,9 +9,9 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.util.CheckClassAdapter;
 
-import com.stralos.asm.ASMUtil;
 import com.stralos.lang.Lambda0;
 import com.stralos.shen.model.S;
+
 
 public class ShenCompiler {
     public static Lambda0 compile(S s) {
@@ -20,22 +19,7 @@ public class ShenCompiler {
     }
 
     public static Lambda0 compile(Environment env, S s) {
-        try {
-            String fullName = "shen/eval/ToEvaluate" + env.nextLambdaId();
-            EvalContext context = env.newEvalContext();
-
-            Map<String, byte[]> classes = ASMUtil
-                    .createLambdaClass(context, new VarInfo[0], fullName, s, new String[0]);
-
-            String clName = fullName.replace('/', '.');
-
-            DirectClassLoader dcl = new DirectClassLoader(env, classes);
-
-            Class<?> cl = dcl.loadClass(clName);
-            return (Lambda0) cl.newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return env.run("shen/eval/ToEvaluate", s);
     }
 
     public static byte[] makeLambda(S s, String fullName, EvalContext context) {
@@ -64,7 +48,7 @@ public class ShenCompiler {
         ClassReader cr = new ClassReader(byteArray);
         cr.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
 
-        context.putClass(fullName.replace('/', '.'), byteArray);
+        context.addClass(fullName.replace('/', '.'), byteArray);
         return byteArray;
     }
 
@@ -82,6 +66,7 @@ public class ShenCompiler {
         mv.visitMaxs(1, 1);
         mv.visitEnd();
     }
+
 
     public static final String COMPILER_METHOD_SIGNATURE = "(Lcom/stralos/shen/model/S;)Lcom/stralos/lang/Lambda0;";
     public static final String LLIST_PATH = "com/stralos/shen/model/LList";
