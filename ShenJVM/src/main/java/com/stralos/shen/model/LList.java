@@ -63,6 +63,7 @@ public class LList implements S {
             Iterator<Object> it = list.iterator();
             in.append(it.next().toString());
             while (it.hasNext()) {
+                in.append(", ");
                 in.append(it.next().toString());
             }
             res = in.toString();

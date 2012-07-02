@@ -24,6 +24,14 @@
 (test-is (= ((f 3) 2) 5))
 (test-is (= 10 (let x 5 (* 2 x))))
 
+"testing errors"
+(test-is (= 1 (/ 1 1)))
+(test-is (= (trap-error (/ 1 0) (lambda E -1)) -1))
+(test-is (= (trap-error (/ 1 0) (lambda E -1)) -1))
+(test-is (= (trap-error (/ 1 1) (lambda E -1)) 1))
+(trap-error (set newError (simple-error "testError")) (lambda E (error-to-string E)))
+
+
 "testing +"
 (test-is (= (+ 2 3) 5))
 (test-is (= (+ 2 -3) -1))
@@ -63,6 +71,7 @@
 "testing if"
 (test-is (if true true false))
 (test-is (if false false true))
+(test-is (= (trap-error (if 5 true true) (lambda _ -1)) -1))
 
 "testing number?"
 (test-is (= (number? 3) true))
@@ -74,17 +83,20 @@
 (test-is (and true true true))
 (test-is (= (and true false true) false))
 (test-is (= (and true false true) false))
+(test-is (= -1 (trap-error (and 2 true) (lambda E -1))))
 
 "testing or"
 (test-is (or true true true))
 (test-is (or true false true))
 (test-is (or (and false false false) true))
+(test-is (= -1 (trap-error (or 2 true) (lambda E -1))))
 
 "testing value"
 (set x 5)
 (test-is (= (value x) 5))
 (set x "foo")
 (test-is (= (value x) "foo"))
+(test-is (= -1 (trap-error (value valueTest) (lambda E -1))))
 
 "testing string?, str, tlstr, cn & pos"
 (test-is (string? "bar"))
@@ -95,6 +107,7 @@
 (test-is (= "bar" (str bar)))
 (test-is (= (string? 55) false))
 (test-is (= (tlstr "foobar") "oobar"))
+(test-is (= (trap-error (cn bla blub) (lambda _ -1)) -1))
 (test-is (= (cn "foo" "bar") "foobar"))
 (test-is (= (pos "bar" 2) "r"))
 
@@ -145,10 +158,18 @@
 (test-is (= "h" (n->string 104)))
 (test-is (= "(" (n->string 40)))
 (test-is (= false (= "d" (n->string 101))))
+(test-is (= -1 (trap-error (n->string -10) (lambda E -1))))
 
 "testing string->n"
 (test-is (= 100 (string->n "d")))
 (test-is (= 104 (string->n "h")))
 (test-is (= 40 (string->n "(")))
 (test-is (= false (= 101 (string->n "d"))))
+(test-is (= -1 (trap-error (string->n "") (lambda E -1))))
 
+"special tests"
+(test-is (= -1 (trap-error ((4 3 2)) (lambda E -1))))
+(test-is (= -1 (trap-error (+4 2) (lambda E -1))))
+(test-is (= -1 (trap-error (+ 4 "2") (lambda E -1))))
+(test-is (= -1 (trap-error (+ 4 specialTest) (lambda E -1))))
+(test-is (= -1 (trap-error (+ 4 true) (lambda E -1))))

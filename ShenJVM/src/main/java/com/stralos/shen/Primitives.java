@@ -15,6 +15,7 @@ import java.util.GregorianCalendar;
 
 import com.stralos.asm.ASMUtil;
 import com.stralos.lang.Lambda;
+import com.stralos.lang.Lambda0;
 import com.stralos.lang.Lambda1;
 import com.stralos.lang.Lambda2;
 import com.stralos.lang.Lambda3;
@@ -232,6 +233,44 @@ public class Primitives {
             return expr;
         }
     };
+
+
+    public static Object evalKl(Object kl) {
+        if (kl instanceof LList) {
+            LList l = (LList) kl;
+            // TODO: do we need a first compile to evaluate embedded things
+            Lambda0 lam = ShenCompiler.compile(Model.slist(l));
+            return lam.apply();
+        } else {
+            return kl;
+        }
+        // mv.visitTypeInsn(CHECKCAST, LLIST_PATH);
+        // mv.visitMethodInsn(INVOKESTATIC,
+        // Primitives.COMPILER_PATH,
+        // Primitives.COMPILER_METHOD_NAME,
+        // COMPILER_METHOD_SIGNATURE);
+        // // At this point, we have a lambda that will return a LList
+        // mv.visitMethodInsn(INVOKEVIRTUAL,
+        // Primitives.LAMBDA_PATH_BASE + 0,
+        // Primitives.LAMBDA_METHOD_NAME,
+        // signatureOfArity(0));
+        // mv.visitTypeInsn(CHECKCAST, LLIST_PATH);
+        // // Now we have the LList, so we convert it to an SList
+        // mv.visitMethodInsn(INVOKESTATIC,
+        // Primitives.MODEL_PATH,
+        // "slist",
+        // "(Lcom/stralos/shen/model/LList;)Lcom/stralos/shen/model/S;");
+        // // And run compile on it--this is the actual "eval-kl" part of the process
+        // mv.visitMethodInsn(INVOKESTATIC,
+        // Primitives.COMPILER_PATH,
+        // Primitives.COMPILER_METHOD_NAME,
+        // COMPILER_METHOD_SIGNATURE);
+        // // And evaluate the lambda returned by compile so we have the actual return value on the stack
+        // mv.visitMethodInsn(INVOKEVIRTUAL,
+        // Primitives.LAMBDA_PATH_BASE + 0,
+        // Primitives.LAMBDA_METHOD_NAME,
+        // signatureOfArity(0));
+    }
 
 
     // Vectors //

@@ -1,12 +1,15 @@
 package com.stralos.asm;
 
 import static com.stralos.shen.Environment.*;
+import static com.stralos.shen.Primitives.*;
 import static org.objectweb.asm.Opcodes.*;
 
+import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.util.CheckClassAdapter;
 
 import com.stralos.lang.Lambda;
 import com.stralos.shen.Environment;
@@ -78,8 +81,8 @@ public class ASMUtil {
             for (int i = 0; i < vars.length; i++) {
                 mv.visitVarInsn(ALOAD, 0); // load "this"
                 mv.visitVarInsn(ALOAD, i + 1); // load the value
-                mv.visitFieldInsn(PUTFIELD, className, "val$" + vars[i].name, "Ljava/lang/Object;");
-                context.push(new FieldInfo(className, vars[i].name));
+                mv.visitFieldInsn(PUTFIELD, className, "val$" + vars[i].name, "L" + vars[i].typePath + ";");
+                context.newLambdaField(new FieldInfo(className, vars[i].name));
             }
             Label construct = new Label();
             mv.visitLabel(construct);
@@ -95,7 +98,7 @@ public class ASMUtil {
 
             mv.visitLocalVariable("this", "L" + className + ";", null, begin, end, 0);
             for (int i = 0; i < vars.length; i++) {
-                mv.visitLocalVariable("val" + i, "Ljava/lang/Object;", null, begin, end, i + 1);
+                mv.visitLocalVariable("val" + i, "L" + vars[i].typePath + ";", null, begin, end, i + 1);
             }
             mv.visitMaxs(0, 0);
             mv.visitEnd();
@@ -105,10 +108,10 @@ public class ASMUtil {
             mv.visitCode();
             Label l0 = new Label();
             Label l1 = new Label();
-            context.push(1); // for "this"
+            context.skipLocalVarThis(); // for "this"
             int varOffset = context.getVarOffset();
             for (int i = 0; i < params.length; i++) {
-                context.push(1, new VarInfo(i + varOffset, params[i], l0, l1));
+                context.bindLocalVar(new VarInfo(i + varOffset, params[i], l0, l1));
             }
             mv.visitLabel(l0);
 
@@ -117,10 +120,16 @@ public class ASMUtil {
             mv.visitInsn(ARETURN);
             mv.visitLabel(l1);
             mv.visitLocalVariable("this", "L" + className + ";", null, l0, l1, 0);
-            for (VarInfo var : context.getBoundSymbols().values()) {
+            for (VarInfo var : context.getMethodLocalVars()) {
                 // TODO: make less ugly
                 if (!(var instanceof FieldInfo)) {
-                    mv.visitLocalVariable(var.name, "Ljava/lang/Object;", null, var.beginLabel, var.endLabel, var.index);
+                    System.out.println("local var for: " + className + ", " + var);
+                    mv.visitLocalVariable(var.name,
+                                          "L" + var.typePath + ";",
+                                          null,
+                                          var.beginLabel,
+                                          var.endLabel,
+                                          var.index);
                 }
             }
 
@@ -129,6 +138,11 @@ public class ASMUtil {
             mv.visitEnd();
         }
         cv.visitEnd();
+        
+        byte[] byteArray = cv.toByteArray();
+        ClassReader cr = new ClassReader(byteArray);
+        cr.accept(new CheckClassAdapter(new ClassWriter(0), true), 0);
+        
         context.addClass(className.replace('/', '.'), cv.toByteArray());
         // return context.getClasses();
     }
@@ -247,6 +261,11 @@ public class ASMUtil {
                            "toLambda",
                            "(Ljava/lang/Object;)Lcom/stralos/lang/Lambda;");
     }
+
+    public static void invokeLambda(MethodVisitor mv, int arity) {
+        mv.visitMethodInsn(INVOKEVIRTUAL, LAMBDA_PATH_BASE + arity, LAMBDA_METHOD_NAME, signatureOfArity(arity));
+    }
+
 
     /**
      * Either a lambda already or a symbol that should be associated with a function so should be in global functions or

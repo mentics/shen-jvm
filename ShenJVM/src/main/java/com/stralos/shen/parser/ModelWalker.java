@@ -52,7 +52,6 @@ public class ModelWalker extends Walker {
         result = List.list(items);
     }
 
-
     boolean enter(ExprList node) {
         containerIndices.push(st.size());
         return true;
@@ -83,7 +82,11 @@ public class ModelWalker extends Walker {
     }
 
     void leave(Atom._Int node) {
+        try {
         st.push(integer(Double.valueOf((String) node._int.text).longValue()));
+        } catch (NumberFormatException nfe) {
+            throw new RuntimeException("Invalid number: "+node._int.text+" in "+node.parent.parent.toString());
+        }
     }
 
     void leave(Atom._Float node) {

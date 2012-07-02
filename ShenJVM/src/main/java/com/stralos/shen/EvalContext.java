@@ -1,6 +1,8 @@
 package com.stralos.shen;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.stralos.shen.model.FunctionInfo;
@@ -14,6 +16,7 @@ public class EvalContext {
 
     // private Map<String, byte[]> classes = new HashMap<>();
     private Map<String, VarInfo> boundSymbols = new HashMap<>();
+    private List<VarInfo> localVars = new ArrayList<>();
     private int varOffset = 0;
 
 
@@ -25,55 +28,63 @@ public class EvalContext {
 
     // Public Methods //
 
-    // public Map<String, byte[]> getClasses() {
-    // return classes;
-    // }
-
     public VarInfo getBoundSymbol(String label) {
         return boundSymbols.get(label);
     }
 
-    // Local Methods //
+    public List<VarInfo> getMethodLocalVars() {
+        return localVars;
+    }
+    
+    public VarInfo[] getScopedVars() {
+        // TODO: clean up
+        List<VarInfo> vars = new ArrayList<>();
+        for (VarInfo value : boundSymbols.values()) {
+            if (value.capture) {
+                vars.add(value);
+            }
+        }
+        return vars.toArray(new VarInfo[vars.size()]);
+    }
 
     public String newLambdaName() {
         return Primitives.NEW_LAMBDA_PATH_BASE + "$" + env.nextLambdaId();
     }
+    
+    
+    // Method Local Var Handling //
 
-    public Map<String, VarInfo> getBoundSymbols() {
-        return boundSymbols;
+    public int getVarOffset() {
+        return varOffset;
+    }
+    
+    public void skipLocalVarThis() {
+        varOffset++;
     }
 
-    public void push(int add) {
-        varOffset += add;
-    }
-
-    public void push(int add, VarInfo varInfo) {
-        push(add);
+    public void bindLocalVar(VarInfo varInfo) {
+        varOffset++;
         boundSymbols.put(varInfo.name, varInfo);
+        localVars.add(varInfo);
     }
 
-    public void push(VarInfo... vars) {
+    public void newLambdaField(VarInfo... vars) {
         for (VarInfo var : vars) {
             boundSymbols.put(var.name, var);
         }
     }
 
-    public void pop(int remove, String varName) {
-        varOffset -= remove;
+    public void unbindLocalVar(String varName) {
+        // Remove from boundSymbols but leave in localVars so it will call visit on the local var at end of method
+        varOffset--;
         boundSymbols.remove(varName);
     }
 
+    // Other //
+    
     public void addClass(String name, byte[] byteArray) {
         // classes.put(name, byteArray);
         env.addClass(name, byteArray);
-    }
-
-    // public void putClasses(Map<String, byte[]> newClasses) {
-    // classes.putAll(newClasses);
-    // }
-
-    public int getVarOffset() {
-        return varOffset;
     }
 
     public EvalContext newChildContext() {

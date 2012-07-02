@@ -46,7 +46,7 @@ public class ShenCompiler {
 
         byte[] byteArray = cw.toByteArray();
         ClassReader cr = new ClassReader(byteArray);
-        cr.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
+        cr.accept(new CheckClassAdapter(new ClassWriter(0), true), 0);
 
         context.addClass(fullName.replace('/', '.'), byteArray);
         return byteArray;
