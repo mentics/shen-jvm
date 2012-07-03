@@ -33,7 +33,7 @@ public class Symbol extends Atom {
     }
 
     public boolean equals(Object o) {
-        return o != null && ((Symbol) o).label.equals(label);
+        return o != null && o instanceof Symbol && ((Symbol) o).label.equals(label);
     }
 
     public String toString() {

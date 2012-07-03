@@ -151,7 +151,7 @@ public class Primitives {
     public static Lambda value = new Lambda1() {
         public Object apply(Object symbol) {
             Object o = Environment.theEnvironment().get(symbol);
-            return o != null ? o : List.nil();
+            return o != null ? o : LList.NIL;
         }
     };
 
@@ -163,7 +163,7 @@ public class Primitives {
      */
     public static Lambda simple_error = new Lambda1() {
         public Object apply(Object message) {
-            throw new RuntimeException((String) message);
+            throw new RuntimeException(message.toString());
         }
     };
 
@@ -183,28 +183,32 @@ public class Primitives {
     public static Lambda cons = new Lambda2() {
         public Object apply(Object newElm, Object list) {
             // Unify the two possibilities
-            if (list instanceof LList) {
-                list = ((LList) list).toList();
+            if (list instanceof List) {
+                return Model.list(((List)list).cons(newElm));
+            } else {
+                return Model.list(((LList)list).toList().cons(newElm));
             }
-            return ((List<Object>) list).cons(newElm);
         }
     };
 
     public static Lambda hd = new Lambda1() {
         public Object apply(Object list) {
-            return ((List<Object>) list).head();
+            return ((LList) list).head();
         }
     };
 
     public static Lambda tl = new Lambda1() {
         public Object apply(Object list) {
-            return ((List<Object>) list).tail();
+            return ((LList)list).tail();
         }
     };
 
     public static Lambda cons_ = new Lambda1() {
         public Object apply(Object list) {
-            return list instanceof List && !((List<Object>) list).isEmpty();
+            if (list instanceof List) {
+                System.out.println("found list in cons?");
+            }
+            return list instanceof LList && !((LList) list).toList().isEmpty();
         }
     };
 
@@ -389,7 +393,7 @@ public class Primitives {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return List.nil();
+            return LList.NIL;
         }
     };
 
@@ -511,6 +515,19 @@ public class Primitives {
     public static Lambda number_ = new Lambda1() {
         public Object apply(Object x) {
             return x instanceof Number;
+        }
+    };
+    
+    public static Lambda printOut = new Lambda1() {
+        public Object apply(Object x) {
+            System.out.println(x.toString());
+            return x;
+        }
+    };
+    
+    public static Lambda list_size = new Lambda1() {
+        public Object apply(Object x) {
+            return ((LList)x).toList().length();
         }
     };
 

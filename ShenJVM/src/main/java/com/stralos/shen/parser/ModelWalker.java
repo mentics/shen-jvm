@@ -31,6 +31,7 @@ public class ModelWalker extends Walker {
     Stack<S> st = new Stack<>();
     Stack<Integer> containerIndices = new Stack<>();
 
+    // TODO: is this going to cause issues because it is different from LList.NIL--especially with eval-kl or list creation
     List<S> result = List.nil();
 
 

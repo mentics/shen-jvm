@@ -56,6 +56,17 @@ public class LList implements S {
         return list;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof LList) {
+            LList o = (LList) other;
+            return this.list != null && this.list.equals(o.list);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
     public String toString() {
         String res = "";
         if (list.length() > 0) {
@@ -69,5 +80,17 @@ public class LList implements S {
             res = in.toString();
         }
         return "[" + res + "]";
+    }
+
+    public Object tail() {
+        if (list.length() == 1) {
+            return LList.NIL;
+        } else {
+            return Model.list(list.tail());
+        }
+    }
+
+    public Object head() {
+        return list.head();
     }
 }

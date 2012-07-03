@@ -183,7 +183,7 @@ public class SList implements S {
         mv.visitInsn(DUP);
 
         for (VarInfo var : vars) {
-            mv.visitVarInsn(ALOAD, var.index);
+            var.visitLoad(mv);
         }
         mv.visitMethodInsn(INVOKESPECIAL, className, "<init>", constructorOfArity(vars.length));
     }
