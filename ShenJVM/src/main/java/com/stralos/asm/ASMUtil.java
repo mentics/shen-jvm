@@ -22,6 +22,9 @@ import com.stralos.shen.model.Symbol;
 
 
 public class ASMUtil {
+    private static final String ASMUTIL = ASMUtil.class.getName().replace('.', '/');
+
+
     public static void run(EvalContext context, String fullName, S s) {
         createLambdaClass(context, new VarInfo[0], fullName, s, new String[0]);
     }
@@ -58,7 +61,7 @@ public class ASMUtil {
             createLambdaClass(EvalContext context, VarInfo[] vars, String className, S body, String[] params) {
         ClassWriter cv = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cv.visit(V1_7, ACC_PUBLIC + ACC_SUPER, className, null, Primitives.LAMBDA_PATH_BASE + params.length, null);
-        System.err.println("creating lambda: " + className);
+        // System.err.println("creating lambda: " + className);
         cv.visitSource("com/stralos/shen/Source.java", null);
 
         for (int i = 0; i < vars.length; i++) {
@@ -123,7 +126,7 @@ public class ASMUtil {
             for (VarInfo var : context.getMethodLocalVars()) {
                 // TODO: make less ugly
                 if (!(var instanceof FieldInfo)) {
-                    System.out.println("local var for: " + className + ", " + var);
+                    // System.out.println("local var for: " + className + ", " + var);
                     mv.visitLocalVariable(var.name,
                                           "L" + var.typePath + ";",
                                           null,
@@ -138,11 +141,11 @@ public class ASMUtil {
             mv.visitEnd();
         }
         cv.visitEnd();
-        
+
         byte[] byteArray = cv.toByteArray();
         ClassReader cr = new ClassReader(byteArray);
         cr.accept(new CheckClassAdapter(new ClassWriter(0), true), 0);
-        
+
         context.addClass(className.replace('/', '.'), cv.toByteArray());
         // return context.getClasses();
     }
@@ -256,10 +259,7 @@ public class ASMUtil {
     }
 
     public static void invokeToLambda(MethodVisitor mv) {
-        mv.visitMethodInsn(INVOKESTATIC,
-                           ASMUtil.class.getName().replace('.', '/'),
-                           "toLambda",
-                           "(Ljava/lang/Object;)Lcom/stralos/lang/Lambda;");
+        mv.visitMethodInsn(INVOKESTATIC, ASMUTIL, "toLambda", "(Ljava/lang/Object;)Lcom/stralos/lang/Lambda;");
     }
 
     public static void invokeLambda(MethodVisitor mv, int arity) {
@@ -292,5 +292,19 @@ public class ASMUtil {
         mv.visitLdcInsn(msg);
         mv.visitMethodInsn(INVOKESPECIAL, "java/lang/RuntimeException", "<init>", "(Ljava/lang/String;)V");
         mv.visitInsn(ATHROW);
+    }
+
+    public static Object userFunc(Object name) {
+        Lambda lambda = Environment.functions.get(name);
+        if (lambda == null) {
+            throw new RuntimeException("Function " + name + " not found.");
+        } else {
+            return lambda;
+        }
+    }
+
+    public static void invokeUserFunc(MethodVisitor mv, String funcName) {
+        mv.visitLdcInsn(funcName);
+        mv.visitMethodInsn(INVOKESTATIC, ASMUTIL, "userFunc", signatureOfArity(1));
     }
 }

@@ -60,23 +60,18 @@ public class SList implements S {
 
     private boolean handleUserFunction(EvalContext context, MethodVisitor mv) {
         String funcName = ss[0].toString();
-        // FunctionInfo f = context.getFunction(funcName);
-        // if (f != null) {
-        // User defined function
-        // String[] params = f.params;
         S[] args = tail(ss);
         String lambdaType = Primitives.LAMBDA_PATH_BASE + args.length;
 
-        loadGlobalFunctions(mv);
-        mv.visitLdcInsn(funcName);
-        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
+        ASMUtil.invokeUserFunc(mv, funcName);
+
+//        loadGlobalFunctions(mv);
+//        mv.visitLdcInsn(funcName);
+//        mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;");
         mv.visitTypeInsn(CHECKCAST, lambdaType);
         visitArgs(context, mv, args);
         mv.visitMethodInsn(INVOKEVIRTUAL, lambdaType, Primitives.LAMBDA_METHOD_NAME, signatureOfArity(args.length));
         return true;
-        // } else {
-        // return false;
-        // }
     }
 
     private boolean handleBuiltInFunction(EvalContext context, MethodVisitor mv) {
@@ -85,11 +80,8 @@ public class SList implements S {
             Primitives.class.getField(toIdentifier(funcName));
             // Built in function
             S[] args = tail(ss);
-            mv.visitFieldInsn(GETSTATIC, PRIMITIVES_PATH, toIdentifier(funcName), "L" + LAMBDA_PATH_BASE + ";");// "L" +
-                                                                                                                // lambdaType
-                                                                                                                // +
-                                                                                                                // ";");
-
+            mv.visitFieldInsn(GETSTATIC, PRIMITIVES_PATH, toIdentifier(funcName), "L" + LAMBDA_PATH_BASE + ";");
+            
             if (args.length > 0) {
                 String lambdaType = LAMBDA_PATH_BASE + args.length;
                 mv.visitTypeInsn(CHECKCAST, lambdaType);
