@@ -2,12 +2,13 @@ package com.stralos.shen;
 
 import static com.stralos.shen.ShenCompiler.*;
 import static com.stralos.shen.model.Model.*;
+import static com.stralos.shen.test.TestUtil.*;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
 import com.stralos.lang.Lambda1;
-import com.stralos.shen.model.LList;
+import com.stralos.shen.model.Cons;
 
 
 public class CompilerTest {
@@ -93,10 +94,10 @@ public class CompilerTest {
 
     @Test
     public void testList() {
-        LList l = (LList) compile(list(symbol("+"), integer(5), integer(6))).apply();
+        Cons l = (Cons) compile(list(symbol("+"), integer(5), integer(6))).apply();
         assertEquals(3, l.toList().length());
 
-        LList l2 = (LList) compile(list(symbol("+"), slist(symbol("+"), flot(5.5d), flot(1.1d)), integer(6))).apply();
+        Cons l2 = (Cons) compile(list(symbol("+"), slist(symbol("+"), flot(5.5d), flot(1.1d)), integer(6))).apply();
         assertArrayEquals(new Object[] { symbol("+"), 6.6d, 6l }, l2.toList().toArray().array());
     }
 

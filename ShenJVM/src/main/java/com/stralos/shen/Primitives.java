@@ -19,9 +19,10 @@ import com.stralos.lang.Lambda0;
 import com.stralos.lang.Lambda1;
 import com.stralos.lang.Lambda2;
 import com.stralos.lang.Lambda3;
-import com.stralos.shen.model.LList;
+import com.stralos.shen.model.Cons;
 import com.stralos.shen.model.Location;
 import com.stralos.shen.model.Model;
+import com.stralos.shen.model.S;
 
 import fj.data.List;
 
@@ -49,7 +50,7 @@ public class Primitives {
 
     public static Lambda intern = new Lambda1() {
         public Object apply(Object str) {
-            return Model.symbol((String) str);
+            return Model.symbol((String) str, Location.UNKNOWN);
         }
     };
 
@@ -152,7 +153,7 @@ public class Primitives {
     public static Lambda value = new Lambda1() {
         public Object apply(Object symbol) {
             Object o = Environment.theEnvironment().get(symbol);
-            return o != null ? o : LList.NIL;
+            return o != null ? o : Cons.NIL;
         }
     };
 
@@ -182,38 +183,47 @@ public class Primitives {
     // Lists //
 
     public static Lambda cons = new Lambda2() {
-        public Object apply(Object newElm, Object list) {
+        public Object apply(Object head, Object tail) {
+            return new Cons(findLocation(head, tail), head, tail);
             // Unify the two possibilities
-            if (list instanceof List) {
-                return Model.list(Location.UNKNOWN, ((List) list).cons(newElm));
-            } else if (list instanceof LList) {
-//                System.out.println("cons: " + newElm + " to " + list);
-                return Model.list(((LList) list).getLocation(), ((LList) list).toList().cons(newElm));
-            } else {
-                // dotted pair thing?
-                return new Object[] { newElm, Model.symbol("|"), list };
-            }
+            // if (list instanceof List) {
+            // return Model.list(Location.UNKNOWN, ((List) list).cons(newElm));
+            // } else if (list instanceof Cons) {
+            // // System.out.println("cons: " + newElm + " to " + list);
+            // return Model.list(((Cons) list).getLocation(), ((Cons) list).toList().cons(newElm));
+            // } else {
+            // // dotted pair thing?
+            // return new Object[] { newElm, Model.symbol("|"), list };
+            // }
         }
     };
 
+
+    public static Location findLocation(Object... os) {
+        for (Object o : os) {
+            if (o instanceof S) {
+                return ((S) o).getLocation();
+            }
+        }
+        return Location.UNKNOWN;
+    }
+
+
     public static Lambda hd = new Lambda1() {
         public Object apply(Object list) {
-            return ((LList) list).head();
+            return ((Cons) list).head();
         }
     };
 
     public static Lambda tl = new Lambda1() {
         public Object apply(Object list) {
-            return ((LList) list).tail();
+            return ((Cons) list).tail();
         }
     };
 
     public static Lambda cons_ = new Lambda1() {
-        public Object apply(Object list) {
-            if (list instanceof List) {
-                System.out.println("found list in cons?");
-            }
-            return list instanceof LList && !((LList) list).toList().isEmpty();
+        public Object apply(Object c) {
+            return c instanceof Cons && c != Cons.NIL; // TODO: safe?
         }
     };
 
@@ -245,8 +255,8 @@ public class Primitives {
 
 
     public static Object evalKl(Object kl) {
-        if (kl instanceof LList) {
-            LList l = (LList) kl;
+        if (kl instanceof Cons) {
+            Cons l = (Cons) kl;
             // TODO: do we need a first compile to evaluate embedded things
             Lambda0 lam = ShenCompiler.compile(Model.slist(l));
             return lam.apply();
@@ -372,7 +382,7 @@ public class Primitives {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return LList.NIL;
+            return Cons.NIL;
         }
     };
 
@@ -504,11 +514,11 @@ public class Primitives {
         }
     };
 
-    public static Lambda list_size = new Lambda1() {
-        public Object apply(Object x) {
-            return ((LList) x).toList().length();
-        }
-    };
+//    public static Lambda list_size = new Lambda1() {
+//        public Object apply(Object x) {
+//            return ((Cons) x).toList().length();
+//        }
+//    };
 
 
     static {

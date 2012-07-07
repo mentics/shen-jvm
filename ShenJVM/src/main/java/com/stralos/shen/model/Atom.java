@@ -5,6 +5,7 @@ public abstract class Atom implements S {
 
 
     public Atom(Location loc) {
+        assert loc != null;
         this.loc = loc;
     }
 

@@ -1,7 +1,7 @@
 package com.stralos.shen;
 
 import com.stralos.lang.Lambda1;
-import com.stralos.shen.model.LList;
+import com.stralos.shen.model.Cons;
 import com.stralos.shen.model.Location;
 import com.stralos.shen.model.Model;
 import com.stralos.shen.parser.FileLocation;
@@ -28,7 +28,7 @@ public class Source {
     }
 
     public static Object symbol() {
-        return Model.symbol("constant string");
+        return Model.symbol("constant string", Location.UNKNOWN);
     }
 
     public static Object and(Object x0, Object x1) {
@@ -62,10 +62,8 @@ public class Source {
     }
 
     public static FileLocation fl() {
-        
         Object os = null;
         Location loc = null;
-        LList.list(loc, os);
         
         return new FileLocation("filename", 17, 13);
     }

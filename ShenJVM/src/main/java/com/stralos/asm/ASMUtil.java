@@ -19,12 +19,15 @@ import com.stralos.shen.FieldInfo;
 import com.stralos.shen.Primitives;
 import com.stralos.shen.VarInfo;
 import com.stralos.shen.model.Loc;
+import com.stralos.shen.model.Location;
 import com.stralos.shen.model.S;
 import com.stralos.shen.model.Symbol;
 
 
 public class ASMUtil {
     private static final String ASMUTIL = ASMUtil.class.getName().replace('.', '/');
+    public static final String FILE_LOCATION_PATH = "com/stralos/shen/parser/FileLocation";
+    public static final String LOCATION_PATH = "com/stralos/shen/model/Location";
 
 
     public static void run(EvalContext context, String fullName, S s) {
@@ -344,5 +347,16 @@ public class ASMUtil {
         // mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
         // mv.visitLdcInsn(msg);
         // mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
+    }
+
+
+
+    public static void visitCreateFileLocation(MethodVisitor mv, Location l) {
+        mv.visitTypeInsn(NEW, FILE_LOCATION_PATH);
+        mv.visitInsn(DUP);
+        mv.visitLdcInsn(path(l));
+        mv.visitIntInsn(BIPUSH, line(l));
+        mv.visitIntInsn(BIPUSH, column(l));
+        mv.visitMethodInsn(INVOKESPECIAL, FILE_LOCATION_PATH, "<init>", "(Ljava/lang/String;II)V");
     }
 }

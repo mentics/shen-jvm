@@ -11,6 +11,7 @@ import com.stralos.lang.Lambda0;
 import com.stralos.shen.model.FunctionInfo;
 import com.stralos.shen.model.S;
 import com.stralos.shen.model.Symbol;
+import com.stralos.shen.parser.FileLocation;
 
 
 public class Environment {
@@ -29,12 +30,13 @@ public class Environment {
     }
 
     public static void setGlobals(Map<Symbol, Object> symbolAssignments) {
-        symbolAssignments.put(symbol("*stoutput*"), System.out);
-        symbolAssignments.put(symbol("*stinput*"), System.in);
-        symbolAssignments.put(symbol("*home_directory*"), new File(".").getAbsolutePath());
-        symbolAssignments.put(symbol("*language*"), "JVM Bytecode");
-        symbolAssignments.put(symbol("*port*"), "0.0");
-        symbolAssignments.put(symbol("*porters*"), "Joel Shellman");
+        symbolAssignments.put(symbol("*stoutput*", new FileLocation("Environment.java", 32, 8)), System.out);
+        symbolAssignments.put(symbol("*stinput*", new FileLocation("Environment.java", 33, 8)), System.in);
+        symbolAssignments.put(symbol("*home_directory*", new FileLocation("Environment.java", 34, 8)),
+                              new File(".").getAbsolutePath());
+        symbolAssignments.put(symbol("*language*", new FileLocation("Environment.java", 35, 8)), "JVM Bytecode");
+        symbolAssignments.put(symbol("*port*", new FileLocation("Environment.java", 36, 8)), "0.0");
+        symbolAssignments.put(symbol("*porters*", new FileLocation("Environment.java", 37, 8)), "Joel Shellman");
     }
 
 

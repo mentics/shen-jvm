@@ -260,7 +260,7 @@ public class SList implements S {
      * creates a continuation
      */
     private void handleFreeze(EvalContext context, MethodVisitor mv, S[] params) {
-        handleLambda(context, mv, new S[] { LList.NIL, params[0] });
+        handleLambda(context, mv, new S[] { Cons.NIL, params[0] });
     }
 
     /**

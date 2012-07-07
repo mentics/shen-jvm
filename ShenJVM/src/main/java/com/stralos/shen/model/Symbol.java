@@ -1,5 +1,6 @@
 package com.stralos.shen.model;
 
+import static com.stralos.asm.ASMUtil.*;
 import static com.stralos.shen.model.Loc.*;
 import static org.objectweb.asm.Opcodes.*;
 
@@ -35,7 +36,10 @@ public class Symbol extends Atom {
             mv.visitLabel(l0);
             mv.visitLineNumber(line(loc), l0);
             mv.visitLdcInsn(label);
-            mv.visitMethodInsn(INVOKESTATIC, Primitives.MODEL_PATH, "symbol", "(Ljava/lang/String;)L"
+
+            visitCreateFileLocation(mv, loc);
+            mv.visitMethodInsn(INVOKESTATIC, Primitives.MODEL_PATH, "symbol", "(Ljava/lang/String;L"
+                                                                              + LOCATION_PATH + ";)L"
                                                                               + Primitives.SYMBOL_PATH + ";");
         }
     }
@@ -43,7 +47,7 @@ public class Symbol extends Atom {
     public int hashCode() {
         return label.hashCode();
     }
-    
+
     public boolean equals(Object o) {
         return o != null && o instanceof Symbol && ((Symbol) o).label.equals(label);
     }
