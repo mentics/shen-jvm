@@ -15,6 +15,14 @@ import fj.data.List;
 
 
 public class ModelWalker extends Walker {
+    private String filename;
+
+
+    public ModelWalker(String filename) {
+        this.filename = filename;
+    }
+
+
     // Overridden because genned code throws NPE
     void visit(Expr node) {
         if (enter(node)) {
@@ -31,7 +39,8 @@ public class ModelWalker extends Walker {
     Stack<S> st = new Stack<>();
     Stack<Integer> containerIndices = new Stack<>();
 
-    // TODO: is this going to cause issues because it is different from LList.NIL--especially with eval-kl or list creation
+    // TODO: is this going to cause issues because it is different from LList.NIL--especially with eval-kl or list
+    // creation
     List<S> result = List.nil();
 
 
@@ -69,29 +78,33 @@ public class ModelWalker extends Walker {
     }
 
     void leave(Atom.Bool node) {
-        st.push(bool("true".equals(node.bool.text)));
+        st.push(bool("true".equals(node.bool.text), new FileLocation(filename, node.bool.line, node.bool.column)));
     }
 
     void leave(Atom.Str node) {
         // TODO: ignore surrounding quotes in scanner/parser
         String s = (String) node.string.text;
-        st.push(string(s.substring(1, s.length() - 1)));
+        st.push(string(s.substring(1, s.length() - 1), new FileLocation(filename, node.string.line, node.string.column)));
     }
 
     void leave(Atom.Symbol node) {
-        st.push(symbol((String) node.symbol.text));
+        st.push(symbol((String) node.symbol.text, new FileLocation(filename, node.symbol.line, node.symbol.column)));
     }
 
     void leave(Atom._Int node) {
         try {
-        st.push(integer(Double.valueOf((String) node._int.text).longValue()));
+            st.push(integer(Double.valueOf((String) node._int.text).longValue(), new FileLocation(filename,
+                                                                                                  node._int.line,
+                                                                                                  node._int.column)));
         } catch (NumberFormatException nfe) {
-            throw new RuntimeException("Invalid number: "+node._int.text+" in "+node.parent.parent.toString());
+            throw new RuntimeException("Invalid number: " + node._int.text + " in " + node.parent.parent.toString());
         }
     }
 
     void leave(Atom._Float node) {
-        st.push(flot(Double.valueOf((String) node._float.text)));
+        st.push(flot(Double.valueOf((String) node._float.text), new FileLocation(filename,
+                                                                                 node._float.line,
+                                                                                 node._float.column)));
     }
 
     public List<S> getResult() {

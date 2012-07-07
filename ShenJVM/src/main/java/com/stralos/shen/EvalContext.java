@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.stralos.asm.ASMUtil;
 import com.stralos.shen.model.FunctionInfo;
 
 
@@ -35,7 +36,7 @@ public class EvalContext {
     public List<VarInfo> getMethodLocalVars() {
         return localVars;
     }
-    
+
     public VarInfo[] getScopedVars() {
         // TODO: clean up
         List<VarInfo> vars = new ArrayList<>();
@@ -50,14 +51,18 @@ public class EvalContext {
     public String newLambdaName() {
         return Primitives.NEW_LAMBDA_PATH_BASE + "$" + env.nextLambdaId();
     }
-    
-    
+
+    public String newLambdaName(String label) {
+        return Primitives.NEW_LAMBDA_PATH_BASE + "$" + ASMUtil.toValidJava(label) + "$" + env.nextLambdaId();
+    }
+
+
     // Method Local Var Handling //
 
     public int getVarOffset() {
         return varOffset;
     }
-    
+
     public void skipLocalVarThis() {
         varOffset++;
     }
@@ -73,6 +78,12 @@ public class EvalContext {
             boundSymbols.put(var.name, var);
         }
     }
+    
+    int fieldNameCounter = 0;
+
+    public String uniqueValidFieldName(String name) {
+            return ASMUtil.toValidJava(name) + (fieldNameCounter++);
+    }
 
     public void unbindLocalVar(String varName) {
         // Remove from boundSymbols but leave in localVars so it will call visit on the local var at end of method
@@ -81,7 +92,7 @@ public class EvalContext {
     }
 
     // Other //
-    
+
     public void addClass(String name, byte[] byteArray) {
         // classes.put(name, byteArray);
         env.addClass(name, byteArray);

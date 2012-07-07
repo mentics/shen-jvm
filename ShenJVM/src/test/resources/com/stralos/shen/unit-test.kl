@@ -1,0 +1,6 @@
+1
+2
+"line 3"
+(defun line4
+  (Line?)
+  (ref2 (cn "line 6" Line?)))

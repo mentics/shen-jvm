@@ -1,0 +1,5 @@
+Can't compile: trap-error
+PROB FIXED: Can't parse: {}, :- (probably :)
+
+
+Shen does not incorporate characters as a data type. The failure object is no longer #\Escape as in Qi, but (fail).

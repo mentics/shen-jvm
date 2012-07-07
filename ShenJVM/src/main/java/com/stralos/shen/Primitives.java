@@ -20,6 +20,7 @@ import com.stralos.lang.Lambda1;
 import com.stralos.lang.Lambda2;
 import com.stralos.lang.Lambda3;
 import com.stralos.shen.model.LList;
+import com.stralos.shen.model.Location;
 import com.stralos.shen.model.Model;
 
 import fj.data.List;
@@ -184,9 +185,13 @@ public class Primitives {
         public Object apply(Object newElm, Object list) {
             // Unify the two possibilities
             if (list instanceof List) {
-                return Model.list(((List)list).cons(newElm));
+                return Model.list(Location.UNKNOWN, ((List) list).cons(newElm));
+            } else if (list instanceof LList) {
+//                System.out.println("cons: " + newElm + " to " + list);
+                return Model.list(((LList) list).getLocation(), ((LList) list).toList().cons(newElm));
             } else {
-                return Model.list(((LList)list).toList().cons(newElm));
+                // dotted pair thing?
+                return new Object[] { newElm, Model.symbol("|"), list };
             }
         }
     };
@@ -199,7 +204,7 @@ public class Primitives {
 
     public static Lambda tl = new Lambda1() {
         public Object apply(Object list) {
-            return ((LList)list).tail();
+            return ((LList) list).tail();
         }
     };
 
@@ -248,32 +253,6 @@ public class Primitives {
         } else {
             return kl;
         }
-        // mv.visitTypeInsn(CHECKCAST, LLIST_PATH);
-        // mv.visitMethodInsn(INVOKESTATIC,
-        // Primitives.COMPILER_PATH,
-        // Primitives.COMPILER_METHOD_NAME,
-        // COMPILER_METHOD_SIGNATURE);
-        // // At this point, we have a lambda that will return a LList
-        // mv.visitMethodInsn(INVOKEVIRTUAL,
-        // Primitives.LAMBDA_PATH_BASE + 0,
-        // Primitives.LAMBDA_METHOD_NAME,
-        // signatureOfArity(0));
-        // mv.visitTypeInsn(CHECKCAST, LLIST_PATH);
-        // // Now we have the LList, so we convert it to an SList
-        // mv.visitMethodInsn(INVOKESTATIC,
-        // Primitives.MODEL_PATH,
-        // "slist",
-        // "(Lcom/stralos/shen/model/LList;)Lcom/stralos/shen/model/S;");
-        // // And run compile on it--this is the actual "eval-kl" part of the process
-        // mv.visitMethodInsn(INVOKESTATIC,
-        // Primitives.COMPILER_PATH,
-        // Primitives.COMPILER_METHOD_NAME,
-        // COMPILER_METHOD_SIGNATURE);
-        // // And evaluate the lambda returned by compile so we have the actual return value on the stack
-        // mv.visitMethodInsn(INVOKEVIRTUAL,
-        // Primitives.LAMBDA_PATH_BASE + 0,
-        // Primitives.LAMBDA_METHOD_NAME,
-        // signatureOfArity(0));
     }
 
 
@@ -517,17 +496,17 @@ public class Primitives {
             return x instanceof Number;
         }
     };
-    
+
     public static Lambda printOut = new Lambda1() {
         public Object apply(Object x) {
             System.out.println(x.toString());
             return x;
         }
     };
-    
+
     public static Lambda list_size = new Lambda1() {
         public Object apply(Object x) {
-            return ((LList)x).toList().length();
+            return ((LList) x).toList().length();
         }
     };
 

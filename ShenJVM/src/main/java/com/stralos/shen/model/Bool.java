@@ -1,5 +1,6 @@
 package com.stralos.shen.model;
 
+import static com.stralos.shen.model.Loc.*;
 import static org.objectweb.asm.Opcodes.*;
 
 import java.io.Serializable;
@@ -15,13 +16,18 @@ public class Bool extends Atom implements Serializable {
     private boolean value;
 
     public Bool(boolean value) {
+        this(value, null);
+    }
+    
+    public Bool(boolean value, Location loc) {
+        super(loc);
         this.value = value;
     }
 
     public void visit(EvalContext context, MethodVisitor mv) {
         Label l0 = new Label();
         mv.visitLabel(l0);
-        mv.visitLineNumber(9, l0);
+        mv.visitLineNumber(line(loc), l0);
         mv.visitFieldInsn(GETSTATIC, "java/lang/Boolean", value ? "TRUE" : "FALSE", "Ljava/lang/Boolean;");
     }
     

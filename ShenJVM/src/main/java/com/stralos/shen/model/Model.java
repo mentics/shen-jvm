@@ -7,34 +7,55 @@ import java.util.Map;
 
 
 public class Model {
-    public static S nil = slist();
+//    static Map<String, Symbol> symbols = new HashMap<>();
 
-    static Map<String, Symbol> symbols = new HashMap<>();
-
-
+//    public static Symbol symbol(String label) {
+//        Symbol s = symbols.get(label);
+//        if (s == null) {
+//            s = new Symbol(label);
+//            symbols.put(label, s);
+//        }
+//        return s;
+//    }
+    
     public static Symbol symbol(String label) {
-        Symbol s = symbols.get(label);
-        if (s == null) {
-            s = new Symbol(label);
-            symbols.put(label, s);
-        }
-        return s;
+        return new Symbol(label);
+    }
+    
+    public static Symbol symbol(String label, Location loc) {
+        return new Symbol(label, loc);
     }
 
     public static Int integer(long i) {
         return new Int(i);
     }
 
+    public static Int integer(long i, Location loc) {
+        return new Int(i, loc);
+    }
+
     public static Flot flot(double d) {
         return new Flot(d);
+    }
+
+    public static Flot flot(double d, Location loc) {
+        return new Flot(d, loc);
     }
 
     public static Str string(String s) {
         return new Str(s);
     }
+    
+    public static Str string(String s, Location loc) {
+        return new Str(s, loc);
+    }
 
     public static S bool(boolean b) {
         return new Bool(b);
+    }
+    
+    public static S bool(boolean b, Location loc) {
+        return new Bool(b, loc);
     }
 
     public static S slist(S... ss) {
@@ -60,8 +81,16 @@ public class Model {
         return slist(result);
     }
 
+    public static LList list(Location loc, fj.data.List<Object> list) {
+        return new LList(loc, list);
+    }
+
     public static LList list(Object... os) {
-        return new LList(os);
+        return new LList(Location.UNKNOWN, os);
+    }
+
+    public static LList list(Location loc, Object... os) {
+        return new LList(loc, os);
     }
 
     public static S toS(Object o) {

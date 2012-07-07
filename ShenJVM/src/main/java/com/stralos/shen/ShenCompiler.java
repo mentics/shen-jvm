@@ -1,6 +1,6 @@
 package com.stralos.shen;
 
-import static com.stralos.asm.ASMUtil.*;
+import static com.stralos.shen.model.Loc.*;
 import static org.objectweb.asm.Opcodes.*;
 
 import org.objectweb.asm.ClassReader;
@@ -10,6 +10,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 import com.stralos.lang.Lambda0;
+import com.stralos.shen.model.Loc;
 import com.stralos.shen.model.S;
 
 
@@ -31,7 +32,7 @@ public class ShenCompiler {
         mv.visitCode();
         Label l0 = new Label();
         mv.visitLabel(l0);
-        mv.visitLineNumber(7, l0);
+        mv.visitLineNumber(line(s), l0);
 
         s.visit(context, mv);
 

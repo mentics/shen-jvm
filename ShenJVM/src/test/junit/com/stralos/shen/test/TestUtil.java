@@ -23,7 +23,7 @@ public class TestUtil {
             Object goal = new Parser().parse(new Scanner(new StringReader(code)));
 
             AST.ListOfExpr expr = (AST.ListOfExpr) goal;
-            ModelWalker mw = new ModelWalker();
+            ModelWalker mw = new ModelWalker("FromString");
             expr.accept(mw);
             fj.data.List<S> ss = mw.getResult();
 

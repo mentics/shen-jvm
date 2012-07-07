@@ -1,0 +1,7 @@
+"ref line 1"
+(defun ref2
+  (RefLine?)
+  (ref5 "from ref line 4"))
+(defun ref5
+  (X)
+  (simple-error X))

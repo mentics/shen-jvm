@@ -2,6 +2,7 @@ package com.stralos.asm;
 
 import static com.stralos.shen.Environment.*;
 import static com.stralos.shen.Primitives.*;
+import static com.stralos.shen.model.Loc.*;
 import static org.objectweb.asm.Opcodes.*;
 
 import org.objectweb.asm.ClassReader;
@@ -17,6 +18,7 @@ import com.stralos.shen.EvalContext;
 import com.stralos.shen.FieldInfo;
 import com.stralos.shen.Primitives;
 import com.stralos.shen.VarInfo;
+import com.stralos.shen.model.Loc;
 import com.stralos.shen.model.S;
 import com.stralos.shen.model.Symbol;
 
@@ -61,12 +63,11 @@ public class ASMUtil {
             createLambdaClass(EvalContext context, VarInfo[] vars, String className, S body, String[] params) {
         ClassWriter cv = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
         cv.visit(V1_7, ACC_PUBLIC + ACC_SUPER, className, null, Primitives.LAMBDA_PATH_BASE + params.length, null);
-        // System.err.println("creating lambda: " + className);
-        cv.visitSource("com/stralos/shen/Source.java", null);
+        cv.visitSource(findSourcePath(body), null);
 
         for (int i = 0; i < vars.length; i++) {
             FieldVisitor fv = cv.visitField(ACC_PRIVATE + ACC_FINAL + ACC_SYNTHETIC,
-                                            "val$" + vars[i].name,
+                                            vars[i].valid,
                                             "Ljava/lang/Object;",
                                             null,
                                             null);
@@ -78,23 +79,21 @@ public class ASMUtil {
         {
             mv = cv.visitMethod(ACC_PUBLIC, "<init>", constructorOfArity(vars.length), null, null);
             mv.visitCode();
-            Label begin = new Label();
-            mv.visitLabel(begin);
-            mv.visitLineNumber(1, begin);
+            Label begin = ASMUtil.visitLoc(mv, Loc.line(body));
             for (int i = 0; i < vars.length; i++) {
                 mv.visitVarInsn(ALOAD, 0); // load "this"
                 mv.visitVarInsn(ALOAD, i + 1); // load the value
-                mv.visitFieldInsn(PUTFIELD, className, "val$" + vars[i].name, "L" + vars[i].typePath + ";");
-                context.newLambdaField(new FieldInfo(className, vars[i].name));
+                mv.visitFieldInsn(PUTFIELD, className, vars[i].valid, "L" + vars[i].typePath + ";");
+                context.newLambdaField(new FieldInfo(className, "val$" + vars[i].name, "val$" + vars[i].valid));
             }
             Label construct = new Label();
             mv.visitLabel(construct);
-            mv.visitLineNumber(2, begin);
+            // mv.visitLineNumber(2, begin);
             mv.visitVarInsn(ALOAD, 0);
             mv.visitMethodInsn(INVOKESPECIAL, Primitives.LAMBDA_PATH_BASE + params.length, "<init>", "()V");
             Label l1 = new Label();
             mv.visitLabel(l1);
-            mv.visitLineNumber(3, l1);
+            // mv.visitLineNumber(3, l1);
             mv.visitInsn(RETURN);
             Label end = new Label();
             mv.visitLabel(end);
@@ -114,7 +113,11 @@ public class ASMUtil {
             context.skipLocalVarThis(); // for "this"
             int varOffset = context.getVarOffset();
             for (int i = 0; i < params.length; i++) {
-                context.bindLocalVar(new VarInfo(i + varOffset, params[i], l0, l1));
+                context.bindLocalVar(new VarInfo(i + varOffset,
+                                                 params[i],
+                                                 context.uniqueValidFieldName(params[i]),
+                                                 l0,
+                                                 l1));
             }
             mv.visitLabel(l0);
 
@@ -127,7 +130,7 @@ public class ASMUtil {
                 // TODO: make less ugly
                 if (!(var instanceof FieldInfo)) {
                     // System.out.println("local var for: " + className + ", " + var);
-                    mv.visitLocalVariable(var.name,
+                    mv.visitLocalVariable(var.valid,
                                           "L" + var.typePath + ";",
                                           null,
                                           var.beginLabel,
@@ -148,6 +151,10 @@ public class ASMUtil {
 
         context.addClass(className.replace('/', '.'), cv.toByteArray());
         // return context.getClasses();
+    }
+
+    private static String findSourcePath(S s) {
+        return path(s.getLocation());
     }
 
     /**
@@ -255,6 +262,16 @@ public class ASMUtil {
         // for (int i = args.length - 1; i >= 0; i--) {
         for (int i = 0; i < args.length; i++) {
             args[i].visit(context, mv);
+            // mv.visitInsn(DUP);
+            // mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Object", "toString", "()Ljava/lang/String;");
+            //
+            // mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            // mv.visitLdcInsn(args[i].toString()+" = ");
+            // mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "print", "(Ljava/lang/String;)V");
+            //
+            // mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+            // mv.visitInsn(SWAP);
+            // mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
         }
     }
 
@@ -294,7 +311,7 @@ public class ASMUtil {
         mv.visitInsn(ATHROW);
     }
 
-    public static Object userFunc(Object name) {
+    public static Object getUserFunc(Object name) {
         Lambda lambda = Environment.functions.get(name);
         if (lambda == null) {
             throw new RuntimeException("Function " + name + " not found.");
@@ -303,8 +320,29 @@ public class ASMUtil {
         }
     }
 
-    public static void invokeUserFunc(MethodVisitor mv, String funcName) {
+    public static void invokeGetUserFunc(MethodVisitor mv, String funcName) {
         mv.visitLdcInsn(funcName);
-        mv.visitMethodInsn(INVOKESTATIC, ASMUTIL, "userFunc", signatureOfArity(1));
+        mv.visitMethodInsn(INVOKESTATIC, ASMUTIL, "getUserFunc", signatureOfArity(1));
+    }
+
+    @Deprecated
+    public static Label visitLoc(MethodVisitor mv, int line) {
+        Label invoke = new Label();
+        mv.visitLabel(invoke);
+        mv.visitLineNumber(line, invoke);
+        return invoke;
+    }
+
+    public static Label visitLoc(MethodVisitor mv, S s) {
+        Label invoke = new Label();
+        mv.visitLabel(invoke);
+        mv.visitLineNumber(line(s), invoke);
+        return invoke;
+    }
+
+    public static void trace(MethodVisitor mv, String msg) {
+        // mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+        // mv.visitLdcInsn(msg);
+        // mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "println", "(Ljava/lang/String;)V");
     }
 }

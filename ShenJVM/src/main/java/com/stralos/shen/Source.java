@@ -1,7 +1,10 @@
 package com.stralos.shen;
 
 import com.stralos.lang.Lambda1;
+import com.stralos.shen.model.LList;
+import com.stralos.shen.model.Location;
 import com.stralos.shen.model.Model;
+import com.stralos.shen.parser.FileLocation;
 
 
 /**
@@ -41,13 +44,13 @@ public class Source {
     }
 
     public static Object if_(Object x0, Object x1, Object x2) {
-        return ((boolean)x0) ? x1 : x2;
+        return ((boolean) x0) ? x1 : x2;
     }
-    
+
     public static Object thr() {
         throw new RuntimeException("No clause returned true in cond.");
     }
-    
+
     public static Object trycatch(Object test, Lambda1 handler) {
         Object v;
         try {
@@ -57,5 +60,13 @@ public class Source {
         }
         return v;
     }
-    
+
+    public static FileLocation fl() {
+        
+        Object os = null;
+        Location loc = null;
+        LList.list(loc, os);
+        
+        return new FileLocation("filename", 17, 13);
+    }
 }

@@ -1,16 +1,22 @@
 package com.stralos.shen;
 
+import static com.stralos.shen.model.Loc.*;
 import static com.stralos.shen.test.TestUtil.*;
 import static org.junit.Assert.*;
+import static tomove.Util.*;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
+import com.stralos.shen.model.Loc;
 import com.stralos.shen.model.S;
+import com.stralos.shen.model.SList;
 import com.stralos.shen.parser.AST;
 import com.stralos.shen.parser.ModelWalker;
 import com.stralos.shen.parser.Parser;
@@ -22,8 +28,55 @@ import fj.data.List;
 
 public class KlTest {
     @Test
+    public void testShenInsertProglogVariablesHelp() {
+        assertNull(evalSingle("(defun shen-insert-prolog-variables-help (V1493 V1494 V1495)\n" + 
+        		" (cond ((= () V1494) V1493)\n" + 
+        		"  ((and (cons? V1494) (variable? (hd V1494)))\n" + 
+        		"   (let V (shen-newpv V1495)\n" + 
+        		"    (let XV/Y (subst V (hd V1494) V1493)\n" + 
+        		"     (let Z-Y (remove (hd V1494) (tl V1494))\n" + 
+        		"      (shen-insert-prolog-variables-help XV/Y Z-Y V1495)))))\n" + 
+        		"  ((cons? V1494) (shen-insert-prolog-variables-help V1493 (tl V1494) V1495))\n" + 
+        		"  (true (shen-sys-error shen-insert-prolog-variables-help))))\n"));
+    }
+    
+    @Test
+    public void testDefunWithFuncParam() {
+        java.util.List<Object> result = TestUtil.eval("(defun cnf (L)\n(cn \"str \"\n(L \"arg\")))\n\n(cnf (lambda S\n(cn S \"suffix\")))");
+        assertEquals("str argsuffix", result.get(1));
+    }
+    
+    @Test
+    public void testUnitTest() throws Exception {
+        List<S> ut = toS("unit-test.kl", new InputStreamReader(streamFromCL("com/stralos/shen/unit-test.kl")));
+        assertEquals(1, line(ut.index(0)));
+        assertEquals(2, line(ut.index(1)));
+        assertEquals(3, line(ut.index(2)));
+        assertEquals(4, line(ut.index(3)));
+        assertEquals(4, line(((SList)ut.index(3)).ss[0]));
+        assertEquals(4, line(((SList)ut.index(3)).ss[1]));
+        S s2 = ((SList)ut.index(3)).ss[2];
+        assertEquals("(Line?)", s2.toString());
+        assertEquals(5, line(s2));
+        S s3 = ((SList)ut.index(3)).ss[3];
+        assertEquals("(ref2 (cn \"line 6\" Line?))", s3.toString());
+        assertEquals(6, line(s3));
+
+        List<S> ref = toS("referenced.kl", new InputStreamReader(streamFromCL("com/stralos/shen/referenced.kl")));
+        for (S s : ut) {
+            ShenCompiler.compile(env, s).apply();
+        }
+        for (S s : ref) {
+            ShenCompiler.compile(env, s).apply();
+        }
+        Object evalSingle = evalSingle("(line4 \"arg0\")");
+        assertEquals("from ref line 4", ((RuntimeException)evalSingle).getMessage());
+        // TODO: check line numbers in stack trace
+    }
+
+    @Test
     public void testCond() {
-//        assertEquals(3l, evalSingle("(cond (false 2) (true 3)"));
+        assertEquals(3l, evalSingle("(cond (false 2) (true 3)"));
         assertEquals(2l, evalSingle("(cond ((= () ()) 2) (true 3)"));
     }
     
@@ -131,13 +184,14 @@ public class KlTest {
 
     @Test
     public void testBreakingThing() throws Exception {
-        Reader reader = new FileReader("testing.kl");
+        File f = new File("testing.kl");
+        Reader reader = new FileReader(f);
         Object goal = new Parser().parse(new Scanner(reader));
         System.out.println(goal);
 
         AST.ListOfExpr expr = (AST.ListOfExpr) goal;
         // expr.accept(new PrintWalker());
-        ModelWalker mw = new ModelWalker();
+        ModelWalker mw = new ModelWalker(f.getAbsolutePath());
         expr.accept(mw);
         List<S> ss = mw.getResult();
         Environment env = Environment.theEnvironment();
@@ -147,13 +201,12 @@ public class KlTest {
                 System.out.println(" > " + ShenCompiler.compile(env, s).apply());
             }
         }
-
     }
 
     @Test
     public void testKl() throws Exception {
         String base = "/home/taotree/dev/dest/workspace/git-shen-jvm/ShenCompiler/kl/";
-        String[] ordered = new String[] { "sys.kl", "writer.kl", "core.kl" };
+        String[] ordered = new String[] { "sys.kl", "writer.kl", "core.kl", "prolog.kl", "yacc.kl" };
         
         File dir = new File(base);
         
@@ -162,7 +215,7 @@ public class KlTest {
             System.out.println("Compiling: "+f.getName());
             FileReader reader = new FileReader(f);
             try {
-                eval(reader);
+                eval(f.getAbsolutePath(), reader);
             } finally {
                 reader.close();
             }
@@ -178,7 +231,7 @@ public class KlTest {
                 System.out.println("Compiling: "+f.getName());
                 FileReader reader = new FileReader(f);
                 try {
-                    eval(reader);
+                    eval(f.getAbsolutePath(), reader);
                 } finally {
                     reader.close();
                 }
@@ -186,20 +239,25 @@ public class KlTest {
         }
     }
 
-    private void eval(Reader reader) throws IOException {
-        Object goal = new Parser().parse(new Scanner(reader));
-//        System.out.println(goal);
-
-        AST.ListOfExpr expr = (AST.ListOfExpr) goal;
-        // expr.accept(new PrintWalker());
-        ModelWalker mw = new ModelWalker();
-        expr.accept(mw);
-        List<S> ss = mw.getResult();
+    public java.util.List<Object> eval(String filename, Reader reader) throws IOException {
+        List<S> ss = toS(filename, reader);
+        java.util.List<Object> result = new ArrayList<Object>();
         Environment env = Environment.theEnvironment();
         for (S s : ss) {
-            System.out.println("evaluating: " + s);
-            Object result = ShenCompiler.compile(env, s).apply();
-            System.out.println(" > " + result);
+            System.out.println("evaluating ("+Loc.path(s)+":"+Loc.line(s)+"): " + s);
+            Object one = ShenCompiler.compile(env, s).apply();
+            System.out.println(" > " + one);
+            result.add(one);
         }
+        return result;
+    }
+
+    public List<S> toS(String filename, Reader reader) throws IOException {
+        Object goal = new Parser().parse(new Scanner(reader));
+        AST.ListOfExpr expr = (AST.ListOfExpr) goal;
+        ModelWalker mw = new ModelWalker(filename);
+        expr.accept(mw);
+        List<S> ss = mw.getResult();
+        return ss;
     }
 }
