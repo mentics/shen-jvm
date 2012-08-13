@@ -35,7 +35,7 @@ public class Cons implements S {
 
     public Cons(Location loc, Object head, Object tail) {
         if (loc == null) {
-            new Throwable().printStackTrace();
+            new Throwable("Null loc to Cons()").printStackTrace();
         }
         this.head = head;
         this.tail = tail;

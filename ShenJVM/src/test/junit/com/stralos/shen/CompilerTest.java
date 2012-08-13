@@ -94,10 +94,10 @@ public class CompilerTest {
 
     @Test
     public void testList() {
-        Cons l = (Cons) compile(list(symbol("+"), integer(5), integer(6))).apply();
+        Cons l = (Cons) compile(cons(symbol("+"), integer(5), integer(6))).apply();
         assertEquals(3, l.toList().length());
 
-        Cons l2 = (Cons) compile(list(symbol("+"), slist(symbol("+"), flot(5.5d), flot(1.1d)), integer(6))).apply();
+        Cons l2 = (Cons) compile(cons(symbol("+"), slist(symbol("+"), flot(5.5d), flot(1.1d)), integer(6))).apply();
         assertArrayEquals(new Object[] { symbol("+"), 6.6d, 6l }, l2.toList().toArray().array());
     }
 
@@ -111,11 +111,11 @@ public class CompilerTest {
 
     @Test
     public void testEvalKL() {
-        assertEquals(6.6d, compile(slist(symbol("eval-kl"), list(symbol("+"), flot(5.5d), flot(1.1d)))).apply());
+        assertEquals(6.6d, compile(slist(symbol("eval-kl"), cons(symbol("+"), flot(5.5d), flot(1.1d)))).apply());
 
         assertEquals(18.1d,
                      compile(slist(symbol("eval-kl"),
-                                   list(symbol("+"),
+                                   cons(symbol("+"),
                                         slist(symbol("+"), slist(symbol("*"), flot(5.5d), flot(2.0d)), flot(1.1d)),
                                         integer(6)))).apply());
     }

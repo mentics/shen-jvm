@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -44,7 +45,6 @@ public class Primitives {
     public static final String COMPILER_PATH = "com/stralos/shen/ShenCompiler";
     public static final String COMPILER_METHOD_NAME = "compile";
 
-    public static final Object FAIL = new Object();
 
     // Other //
 
@@ -237,6 +237,10 @@ public class Primitives {
      */
     public static Lambda equal = new Lambda2() {
         public Object apply(Object x0, Object x1) {
+        	// TODO: I'm not sure this is correct behavior, but it gets me past the "unexpected argument" error in shen-change-pointer thing called through shen-initialise_arity_table
+        	if ((x0 == null || x0 == Cons.NIL) && (x1 == null || x1 == Cons.NIL)) {
+        		return true;
+        	}
             return x0 != null && x0.equals(x1);
         }
     };
@@ -509,7 +513,17 @@ public class Primitives {
 
     public static Lambda printOut = new Lambda1() {
         public Object apply(Object x) {
+        	System.out.print("PRINT OUT: ");
+        	if (x instanceof Object[]) {
+        		System.out.print("[");
+        		Object[] a = (Object[]) x;
+        		for (int i=0; i<a.length; i++) {
+        			System.out.print(a[i]+",");
+        		}
+        		System.out.println("]");
+        	} else {
             System.out.println(x.toString());
+        	}
             return x;
         }
     };

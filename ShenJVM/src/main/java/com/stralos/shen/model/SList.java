@@ -173,6 +173,9 @@ public class SList implements S {
         case "cond":
             handleCond(context, mv, args);
             break;
+        case "fail":
+        	handleFail(context, mv, args);
+        	break;
         default:
             handled = false;
         }
@@ -183,7 +186,11 @@ public class SList implements S {
     }
 
 
-    private void handleDefun(EvalContext context, MethodVisitor mv, S[] args) {
+    private void handleFail(EvalContext context, MethodVisitor mv, S[] args) {
+        mv.visitFieldInsn(GETSTATIC, "com/stralos/shen/model/Fail", "FAIL", "Lcom/stralos/shen/model/Fail;");
+	}
+
+	private void handleDefun(EvalContext context, MethodVisitor mv, S[] args) {
         String funcName = args[0].toString();
         String[] paramNames = toStringArray(args[1]);
         S body = args[2];
@@ -233,9 +240,9 @@ public class SList implements S {
         Label begin = new Label();
         Label end = new Label();
 
-        visitLoc(mv, line(ss[0]));
+        visitLoc(mv, ss[0]);
         value.visit(context, mv);
-        visitLoc(mv, line(ss[0]));
+        visitLoc(mv, ss[0]);
 
         int varOffset = context.getVarOffset();
         mv.visitVarInsn(ASTORE, varOffset);

@@ -7,7 +7,7 @@ import fj.F;
 
 
 public class Model {
-    // TODO: move
+	// TODO: move
     public static final F<Object, String> TO_STRING = new F<Object, String>() {
         public String f(Object o) {
             return o.toString();
@@ -75,7 +75,7 @@ public class Model {
         return slist(result.toArray(new S[result.size()]));
     }
 
-    public static Cons list(Location loc, Object head, Object tail) {
+    public static Cons cons(Location loc, Object head, Object tail) {
         return new Cons(loc, head, tail);
     }
 
