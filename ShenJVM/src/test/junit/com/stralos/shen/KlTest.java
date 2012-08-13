@@ -32,6 +32,16 @@ import fj.data.List;
 
 public class KlTest {
 	@Test
+	public void testShenLoop() {
+		assertEquals(2l, TestUtil.evalSingle("(foo 1 (trap-error 1 (lambda E (printOut E))))")); 
+//		assertEquals(2l, TestUtil.evalSingle("(defun shen-loop ()\n" + 
+//				"   (do\n" + 
+//				"    (trap-error (printOut \"to be trapped\")\n" + 
+//				"     (lambda E (pr (error-to-string E) (value *stoutput*))))\n" + 
+//				"    (shen-loop)))\n"));
+	}
+	
+	@Test
 	public void testFunctionFunctionShortcut() {
 		assertEquals(2l, TestUtil.eval(
 				"(defun func (X Y) (+ X Y))\n" + "((func) 1 1)").get(1));
@@ -41,15 +51,17 @@ public class KlTest {
 	
 	@Test
 	public void testVariableScopedIntoLambda() {
-		assertEquals(2l, TestUtil.eval( 
+		Cons val = (Cons)TestUtil.evalSingle( 
 				" (let Arity 1\n" + 
 				"  (let Free 2\n" + 
 				"   (let Variables 3\n" + 
 				"    (let Linear 4\n" + 
 				"     (let Abstractions 5\n" + 
 				"      (let Applications\n" + 
-				"       ((lambda X (+ (printOut Variables) X)) Abstractions) 1)\n" + 
-				"       (cons Variables (cons Applications ())))))))))"));
+				"       ((lambda X (+ X (+ Variables Arity))) Abstractions)\n" + 
+				"       (cons Variables (cons Applications ())))))))))");
+		assertEquals(3l, val.head);
+		assertEquals(9l, ((Cons)val.tail).head);
 	}
 
 	@Test
@@ -277,10 +289,10 @@ public class KlTest {
 			}
 		}
 
-		for (File f : dir.listFiles()) {
+		test: for (File f : dir.listFiles()) {
 			for (int i = 0; i < ordered.length; i++) {
 				if (f.getName().contains(ordered[i])) {
-					continue;
+					continue test;
 				}
 			}
 			if (f.isFile() && f.getName().endsWith(".kl")) {
@@ -294,6 +306,8 @@ public class KlTest {
 				}
 			}
 		}
+		
+		evalSingle("(shen-shen)");
 	}
 
 	public java.util.List<Object> eval(String filename, Reader reader)

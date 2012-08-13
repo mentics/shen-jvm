@@ -1,14 +1,25 @@
 package com.stralos.shen;
 
-import static com.stralos.shen.ShenCompiler.*;
-import static com.stralos.shen.model.Model.*;
-import static com.stralos.shen.test.TestUtil.*;
-import static org.junit.Assert.*;
+import static com.stralos.shen.ShenCompiler.compile;
+import static com.stralos.shen.model.Location.UNKNOWN;
+import static com.stralos.shen.model.Model.cons;
+import static com.stralos.shen.model.Model.slist;
+import static com.stralos.shen.test.TestUtil.flot;
+import static com.stralos.shen.test.TestUtil.integer;
+import static com.stralos.shen.test.TestUtil.string;
+import static com.stralos.shen.test.TestUtil.symbol;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.List;
 
 import org.junit.Test;
 
 import com.stralos.lang.Lambda1;
 import com.stralos.shen.model.Cons;
+
+import fj.F;
 
 
 public class CompilerTest {
@@ -94,11 +105,11 @@ public class CompilerTest {
 
     @Test
     public void testList() {
-        Cons l = (Cons) compile(cons(symbol("+"), integer(5), integer(6))).apply();
-        assertEquals(3, l.toList().length());
+        Cons l = (Cons) compile(makeCons(symbol("+"), integer(5), integer(6))).apply();
+        assertEquals(3, toList(l).size());
 
-        Cons l2 = (Cons) compile(cons(symbol("+"), slist(symbol("+"), flot(5.5d), flot(1.1d)), integer(6))).apply();
-        assertArrayEquals(new Object[] { symbol("+"), 6.6d, 6l }, l2.toList().toArray().array());
+        Cons l2 = (Cons) compile(makeCons(symbol("+"), slist(symbol("+"), flot(5.5d), flot(1.1d)), integer(6))).apply();
+        assertArrayEquals(new Object[] { symbol("+"), 6.6d, 6l }, toList(l2).toArray());
     }
 
     @Test
@@ -111,11 +122,11 @@ public class CompilerTest {
 
     @Test
     public void testEvalKL() {
-        assertEquals(6.6d, compile(slist(symbol("eval-kl"), cons(symbol("+"), flot(5.5d), flot(1.1d)))).apply());
+        assertEquals(6.6d, compile(slist(symbol("eval-kl"), makeCons(symbol("+"), flot(5.5d), flot(1.1d)))).apply());
 
         assertEquals(18.1d,
                      compile(slist(symbol("eval-kl"),
-                                   cons(symbol("+"),
+                             makeCons(symbol("+"),
                                         slist(symbol("+"), slist(symbol("*"), flot(5.5d), flot(2.0d)), flot(1.1d)),
                                         integer(6)))).apply());
     }
@@ -123,5 +134,21 @@ public class CompilerTest {
     @Test
     public void testSimpleEvalKL() {
         assertEquals(5l, compile(slist(symbol("eval-kl"), integer(5))).apply());
+    }
+    
+    public static Cons makeCons(Object... os) {
+        Cons c = cons(UNKNOWN, os[os.length-1], Cons.NIL);
+        for (int i=os.length-1; i>0; i--) {
+            c = cons(UNKNOWN, os[i], c);
+        }
+        return c;
+    }
+    
+    public static List<Object> toList(Cons c) {
+        return c.forEach(new F<Object,Object>() {
+            public Object f(Object x) {
+                return x;
+            }
+        }); 
     }
 }

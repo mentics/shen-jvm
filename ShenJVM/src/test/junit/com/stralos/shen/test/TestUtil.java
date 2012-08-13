@@ -37,7 +37,7 @@ public class TestUtil {
                 try {
                     ret.add(ShenCompiler.compile(env, s).apply());
                 } catch (Throwable t) {
-//                    t.printStackTrace();
+                    t.printStackTrace();
                     ret.add(t);
                 }
             }

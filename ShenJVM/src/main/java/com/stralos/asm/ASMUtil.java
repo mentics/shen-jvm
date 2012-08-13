@@ -25,6 +25,8 @@ import static org.objectweb.asm.Opcodes.PUTFIELD;
 import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_7;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
@@ -34,6 +36,7 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.tree.analysis.AnalyzerException;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 import com.stralos.lang.Lambda;
@@ -112,8 +115,9 @@ public class ASMUtil {
 				mv.visitVarInsn(ALOAD, i + 1); // load the value
 				mv.visitFieldInsn(PUTFIELD, className, vars[i].valid, "L"
 						+ vars[i].typePath + ";");
-				context.newLambdaField(new FieldInfo(className, "val$"
-						+ vars[i].name, "val$" + vars[i].valid));
+//				context.newLambdaField(new FieldInfo(className, "val$"
+//						+ vars[i].name, "val$" + vars[i].valid));
+				context.newLambdaField(new FieldInfo(className, vars[i].name, vars[i].valid));
 			}
 			Label construct = new Label();
 			mv.visitLabel(construct);
@@ -175,7 +179,20 @@ public class ASMUtil {
 
 		byte[] byteArray = cv.toByteArray();
 		ClassReader cr = new ClassReader(byteArray);
-		cr.accept(new CheckClassAdapter(new ClassWriter(0), true), 0);
+		try {
+			System.err.println("Checking: "+className);
+			cr.accept(new CheckClassAdapter(new ClassWriter(0), true), 0);
+		} catch (Exception ae) {
+			try {
+				FileOutputStream out = new FileOutputStream("BadClass.class");
+				out.write(byteArray);
+				out.close();
+				throw ae;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 
 		context.addClass(className.replace('/', '.'), cv.toByteArray());
 		// return context.getClasses();

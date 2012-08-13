@@ -173,9 +173,9 @@ public class SList implements S {
         case "cond":
             handleCond(context, mv, args);
             break;
-        case "fail":
-        	handleFail(context, mv, args);
-        	break;
+//        case "fail":
+//        	handleFail(context, mv, args);
+//        	break;
         default:
             handled = false;
         }
